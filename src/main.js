@@ -597,36 +597,13 @@ function toggleFolder(name) {
 }
 
 // ===========================
-// WINDOW ACTIONS (desktop)
+// WINDOW MANAGER
 // ===========================
 
-function toggleMaximize(win) {
-  state.windowMaximized = !state.windowMaximized;
-  if (state.windowMaximized) {
-    win._preMax = { top: win.style.top, left: win.style.left, width: win.style.width, height: win.style.height };
-    win.style.transition = 'top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease, border-radius 0.2s ease';
-    win.classList.add('maximized');
-  } else {
-    win.style.transition = 'top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease, border-radius 0.2s ease';
-    win.classList.remove('maximized');
-    if (win._preMax) {
-      Object.assign(win.style, win._preMax);
-    }
-    setTimeout(() => win.style.transition = '', 200);
-  }
-}
+let topZ = 10;
+function bringToFront(win) { win.style.zIndex = ++topZ; }
 
-function closeWindow(win) {
-  state.windowOpen = false;
-  win.style.transition = 'opacity 0.18s, transform 0.18s';
-  win.style.opacity = '0';
-  win.style.transform = 'scale(0.96) translateY(8px)';
-  setTimeout(() => { win.style.display = 'none'; }, 200);
-  document.getElementById('dock-dot')?.classList.add('hidden');
-}
-
-function revealWindow(win) {
-  state.windowOpen = true;
+function winFadeIn(win) {
   win.style.display = 'flex';
   win.style.opacity = '0';
   win.style.transform = 'scale(0.96) translateY(8px)';
@@ -634,7 +611,185 @@ function revealWindow(win) {
     win.style.transition = 'opacity 0.18s, transform 0.18s';
     win.style.opacity = '1';
     win.style.transform = 'scale(1) translateY(0)';
+    setTimeout(() => win.style.transition = '', 200);
   });
+}
+
+function winFadeOut(win, then) {
+  win.style.transition = 'opacity 0.18s, transform 0.18s';
+  win.style.opacity = '0';
+  win.style.transform = 'scale(0.96) translateY(8px)';
+  setTimeout(() => { win.style.transition = ''; if (then) then(); }, 200);
+}
+
+function winToggleMax(win) {
+  if (win._maximized) {
+    win._maximized = false;
+    win.classList.remove('maximized');
+    if (win._preMax) {
+      win.style.transition = 'all 0.2s ease';
+      Object.assign(win.style, win._preMax);
+      setTimeout(() => win.style.transition = '', 220);
+    }
+  } else {
+    win._maximized = true;
+    win._preMax = { top: win.style.top, left: win.style.left, width: win.style.width, height: win.style.height };
+    win.style.transition = 'all 0.2s ease';
+    win.classList.add('maximized');
+    setTimeout(() => win.style.transition = '', 220);
+  }
+}
+
+function attachWindowChrome(win, titlebar, { onClose, onMinimize, onMax } = {}) {
+  titlebar.querySelector('.light-red').addEventListener('click', e => {
+    e.stopPropagation();
+    winFadeOut(win, onClose || (() => win.style.display = 'none'));
+    const dot = win._dockDot;
+    if (dot) dot.classList.add('hidden');
+  });
+  titlebar.querySelector('.light-yellow').addEventListener('click', e => {
+    e.stopPropagation();
+    if (onMinimize) onMinimize();
+    else winFadeOut(win, () => win.style.display = 'none');
+    const dot = win._dockDot;
+    if (dot) dot.classList.add('hidden');
+  });
+  titlebar.querySelector('.light-green').addEventListener('click', e => {
+    e.stopPropagation();
+    if (onMax) onMax(); else winToggleMax(win);
+  });
+  win.addEventListener('mousedown', () => bringToFront(win));
+}
+
+function openAppWindow({ id, title, width, height, buildContent, offset = { x: 0, y: 0 }, dockDot }) {
+  const desktop = document.querySelector('.desktop');
+  const existing = document.getElementById(id);
+  if (existing) {
+    if (existing.style.display === 'none') {
+      winFadeIn(existing);
+      if (dockDot) dockDot.classList.remove('hidden');
+    }
+    bringToFront(existing);
+    return existing;
+  }
+
+  const w = Math.min(width, window.innerWidth * 0.88);
+  const h = Math.min(height, window.innerHeight * 0.84);
+  const left = (window.innerWidth - w) / 2 + offset.x;
+  const top = 28 + (window.innerHeight - 28 - h) / 2 + offset.y;
+
+  const win = document.createElement('div');
+  win.className = 'ide-window';
+  win.id = id;
+  win.style.cssText = `width:${w}px;height:${h}px;left:${left}px;top:${top}px;`;
+  win._dockDot = dockDot || null;
+
+  const titlebar = document.createElement('div');
+  titlebar.className = 'window-titlebar';
+  titlebar.innerHTML = `
+    <div class="traffic-lights">
+      <span class="light light-red"></span>
+      <span class="light light-yellow"></span>
+      <span class="light light-green"></span>
+    </div>
+    <span class="titlebar-title">${title}</span>`;
+
+  const contentEl = buildContent();
+  contentEl.style.cssText = 'flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;';
+
+  win.appendChild(titlebar);
+  win.appendChild(contentEl);
+
+  attachWindowChrome(win, titlebar);
+  makeDraggable(win, titlebar);
+
+  desktop.appendChild(win);
+  bringToFront(win);
+  if (dockDot) dockDot.classList.remove('hidden');
+  return win;
+}
+
+// ===========================
+// APP CONTENT BUILDERS
+// ===========================
+
+
+function buildBlogContent() {
+  const blogIds = ['post-1'];
+  let activeId = blogIds[0];
+
+  const el = document.createElement('div');
+  el.style.cssText = 'display:flex;height:100%;background:#1e1e1e;min-height:0;';
+
+  // Sidebar
+  const sidebar = document.createElement('div');
+  sidebar.style.cssText = 'width:200px;background:#252526;border-right:1px solid #1e1e1e;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;';
+  sidebar.innerHTML = `<div style="font-size:11px;font-weight:700;color:#ccc;padding:10px 12px 6px;letter-spacing:0.06em;text-transform:uppercase;">Blog</div>`;
+
+  // Editor pane
+  const pane = document.createElement('div');
+  pane.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;';
+
+  function renderPost(id) {
+    const file = files[id];
+    const lines = file.content.split('\n');
+    pane.innerHTML = '';
+
+    const tabBar = document.createElement('div');
+    tabBar.style.cssText = 'height:35px;background:#2d2d2d;border-bottom:1px solid #1e1e1e;display:flex;align-items:flex-end;flex-shrink:0;';
+    tabBar.innerHTML = `<div style="padding:0 16px;height:35px;background:#1e1e1e;display:flex;align-items:center;font-size:13px;color:#fff;border-top:1px solid #007acc;font-family:system-ui;gap:8px;"><div style="width:12px;height:12px;background:#519aba;border-radius:2px;"></div>${file.name}</div>`;
+
+    const scroll = document.createElement('div');
+    scroll.style.cssText = 'flex:1;display:flex;overflow-y:auto;';
+
+    const lineNums = document.createElement('div');
+    lineNums.style.cssText = 'width:52px;padding:12px 10px 12px 0;text-align:right;font-family:"JetBrains Mono",Consolas,monospace;font-size:14px;line-height:22px;color:#555;border-right:1px solid rgba(255,255,255,0.04);flex-shrink:0;align-self:flex-start;';
+    lineNums.innerHTML = lines.map((_, i) => `<span style="display:block;">${i + 1}</span>`).join('');
+
+    const content = document.createElement('div');
+    content.style.cssText = 'flex:1;padding:12px 20px 60px;font-family:"JetBrains Mono",Consolas,monospace;font-size:14px;line-height:22px;white-space:pre-wrap;word-break:break-word;align-self:flex-start;width:100%;';
+    content.innerHTML = lines.map(line => `<div style="display:block;min-height:22px;">${renderLine(line)}</div>`).join('');
+
+    scroll.appendChild(lineNums);
+    scroll.appendChild(content);
+    pane.appendChild(tabBar);
+    pane.appendChild(scroll);
+  }
+
+  blogIds.forEach(id => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:4px 12px 4px 18px;font-size:13px;color:#bbb;cursor:pointer;display:flex;align-items:center;gap:7px;';
+    item.innerHTML = `<span style="width:8px;height:8px;background:#519aba;border-radius:2px;display:inline-block;flex-shrink:0;"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${files[id].name}</span>`;
+    item.addEventListener('click', () => { activeId = id; renderPost(id); });
+    item.addEventListener('mouseover', () => item.style.background = '#2a2d2e');
+    item.addEventListener('mouseout', () => item.style.background = '');
+    sidebar.appendChild(item);
+  });
+
+  el.appendChild(sidebar);
+  el.appendChild(pane);
+  renderPost(activeId);
+  return el;
+}
+
+// ===========================
+// WINDOW ACTIONS (desktop IDE window)
+// ===========================
+
+function toggleMaximize(win) {
+  state.windowMaximized = !state.windowMaximized;
+  winToggleMax(win);
+}
+
+function closeWindow(win) {
+  state.windowOpen = false;
+  winFadeOut(win, () => win.style.display = 'none');
+  document.getElementById('dock-dot')?.classList.add('hidden');
+}
+
+function revealWindow(win) {
+  state.windowOpen = true;
+  winFadeIn(win);
   document.getElementById('dock-dot')?.classList.remove('hidden');
 }
 
@@ -678,21 +833,52 @@ function buildWallpaper() {
 function buildDesktopMenubar() {
   const el = document.createElement('div');
   el.className = 'desktop-menubar';
-  el.innerHTML = `
-    <div class="dmb-left">
-      <span class="dmb-logo">⌘</span>
-      <span class="dmb-brand">The Absurd Machine</span>
-      <span class="dmb-item">Portfolio</span>
-      <span class="dmb-item">Projects</span>
-      <span class="dmb-item">Blog</span>
-    </div>
-    <div class="dmb-right">
-      <span id="desktop-time" class="dmb-time"></span>
-    </div>`;
-  const timeEl = el.querySelector('#desktop-time');
+
+  const left = document.createElement('div');
+  left.className = 'dmb-left';
+
+  const brand = document.createElement('span');
+  brand.className = 'dmb-logo';
+  brand.textContent = '⌘';
+
+  const name = document.createElement('span');
+  name.className = 'dmb-brand';
+  name.textContent = 'The Absurd Machine';
+
+  function mbItem(label, onClick) {
+    const s = document.createElement('span');
+    s.className = 'dmb-item';
+    s.textContent = label;
+    s.style.cursor = 'pointer';
+    s.addEventListener('click', onClick);
+    return s;
+  }
+
+  left.appendChild(brand);
+  left.appendChild(name);
+  left.appendChild(mbItem('Portfolio', () => {
+    const ide = document.getElementById('ide-window');
+    if (ide) { if (ide.style.display === 'none') revealWindow(ide); bringToFront(ide); }
+  }));
+  left.appendChild(mbItem('Blog', () => {
+    const dot = document.getElementById('dock-dot-blog');
+    openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 900, height: 620, buildContent: buildBlogContent, dockDot: dot, offset: { x: 0, y: -10 } });
+  }));
+  left.appendChild(mbItem('YouTube', () => window.open('https://youtube.com/@theabsurdmachine', '_blank')));
+  left.appendChild(mbItem('GitHub', () => window.open('https://github.com/TheAbsurdMachine', '_blank')));
+
+  const right = document.createElement('div');
+  right.className = 'dmb-right';
+  const timeEl = document.createElement('span');
+  timeEl.className = 'dmb-time';
+  right.appendChild(timeEl);
+
   function tick() { timeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
   tick();
   setInterval(tick, 10000);
+
+  el.appendChild(left);
+  el.appendChild(right);
   return el;
 }
 
@@ -739,40 +925,71 @@ function buildIdeWindow() {
   win.appendChild(titlebar);
   win.appendChild(body);
 
+  win.addEventListener('mousedown', () => bringToFront(win));
   makeDraggable(win, titlebar);
   return win;
 }
 
-function buildDock(win) {
+function buildDock(ideWin) {
   const dock = document.createElement('div');
   dock.className = 'dock';
 
+  function dockItem(tooltip, iconHtml, dotId, onClick) {
+    const item = document.createElement('div');
+    item.className = 'dock-item';
+    item.innerHTML = `
+      <div class="dock-tooltip">${tooltip}</div>
+      <div class="dock-icon">${iconHtml}</div>
+      <div class="dock-dot hidden" ${dotId ? `id="${dotId}"` : ''}></div>`;
+    item.addEventListener('click', onClick);
+    dock.appendChild(item);
+    return item.querySelector('.dock-dot');
+  }
+
   // Portfolio IDE
-  const ideItem = document.createElement('div');
-  ideItem.className = 'dock-item';
-  ideItem.innerHTML = `
-    <div class="dock-tooltip">Portfolio IDE</div>
-    <div class="dock-icon" style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);">
-      <span style="font-family:'JetBrains Mono',monospace;font-size:17px;color:#007acc;font-weight:700">&lt;/&gt;</span>
-    </div>
-    <div class="dock-dot" id="dock-dot"></div>`;
-  ideItem.addEventListener('click', () => {
-    if (!state.windowOpen) revealWindow(win);
-  });
+  const ideDot = dockItem(
+    'Portfolio IDE',
+    `<div style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);width:100%;height:100%;border-radius:13px;display:flex;align-items:center;justify-content:center;">
+       <span style="font-family:'JetBrains Mono',monospace;font-size:17px;color:#007acc;font-weight:700">&lt;/&gt;</span>
+     </div>`,
+    'dock-dot',
+    () => { if (!state.windowOpen) revealWindow(ideWin); else bringToFront(ideWin); }
+  );
+  ideDot.classList.remove('hidden');
+
+  // Blog
+  dockItem(
+    'Blog',
+    `<div style="background:linear-gradient(145deg,#2d1b4e,#1a0d2e);width:100%;height:100%;border-radius:13px;display:flex;align-items:center;justify-content:center;">
+       <svg width="26" height="28" viewBox="0 0 26 28" fill="none"><rect x="2" y="2" width="22" height="24" rx="3" stroke="#c678dd" stroke-width="2"/><line x1="7" y1="9" x2="19" y2="9" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="14" x2="19" y2="14" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="19" x2="14" y2="19" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/></svg>
+     </div>`,
+    'dock-dot-blog',
+    () => {
+      const dot = document.getElementById('dock-dot-blog');
+      openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 900, height: 620, buildContent: buildBlogContent, dockDot: dot, offset: { x: 0, y: -10 } });
+    }
+  );
+
+  // YouTube
+  dockItem(
+    'YouTube',
+    `<div style="background:#0f0f0f;width:100%;height:100%;border-radius:13px;display:flex;align-items:center;justify-content:center;border:1px solid #272727;">
+       <svg width="32" height="22" viewBox="0 0 32 22"><rect width="32" height="22" rx="5" fill="#FF0000"/><path d="M13 6.5l10 4.5-10 4.5V6.5z" fill="white"/></svg>
+     </div>`,
+    null,
+    () => window.open('https://youtube.com/@theabsurdmachine', '_blank')
+  );
 
   // GitHub
-  const ghItem = document.createElement('div');
-  ghItem.className = 'dock-item';
-  ghItem.innerHTML = `
-    <div class="dock-tooltip">GitHub</div>
-    <div class="dock-icon" style="background:#161b22;">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="#e6edf3"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-    </div>
-    <div class="dock-dot hidden"></div>`;
-  ghItem.addEventListener('click', () => window.open('https://github.com/TheAbsurdMachine', '_blank'));
+  dockItem(
+    'GitHub',
+    `<div style="background:#161b22;width:100%;height:100%;border-radius:13px;display:flex;align-items:center;justify-content:center;">
+       <svg width="28" height="28" viewBox="0 0 24 24" fill="#e6edf3"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+     </div>`,
+    null,
+    () => window.open('https://github.com/TheAbsurdMachine', '_blank')
+  );
 
-  dock.appendChild(ideItem);
-  dock.appendChild(ghItem);
   return dock;
 }
 
