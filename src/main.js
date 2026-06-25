@@ -715,60 +715,143 @@ function openAppWindow({ id, title, width, height, buildContent, offset = { x: 0
 
 
 function buildBlogContent() {
-  const blogIds = ['post-1'];
-  let activeId = blogIds[0];
+  const blogEntries = [
+    { id: 'post-1', slug: 'on-building-absurd-things' },
+  ];
+  let activeId = blogEntries[0].id;
 
   const el = document.createElement('div');
-  el.style.cssText = 'display:flex;height:100%;background:#1e1e1e;min-height:0;';
+  el.style.cssText = 'display:flex;flex-direction:column;height:100%;background:#111;overflow:hidden;';
 
-  // Sidebar
-  const sidebar = document.createElement('div');
-  sidebar.style.cssText = 'width:200px;background:#252526;border-right:1px solid #1e1e1e;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;';
-  sidebar.innerHTML = `<div style="font-size:11px;font-weight:700;color:#ccc;padding:10px 12px 6px;letter-spacing:0.06em;text-transform:uppercase;">Blog</div>`;
+  // ── Browser toolbar ──
+  const toolbar = document.createElement('div');
+  toolbar.style.cssText = 'height:40px;background:#2a2a2a;border-bottom:1px solid #111;display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0;';
+  toolbar.innerHTML = `
+    <button style="background:none;border:none;color:#666;font-size:17px;cursor:default;padding:4px 6px;line-height:1;">←</button>
+    <button style="background:none;border:none;color:#666;font-size:17px;cursor:default;padding:4px 6px;line-height:1;">→</button>
+    <button style="background:none;border:none;color:#888;font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;" id="blog-refresh">↺</button>
+    <div id="blog-address" style="flex:1;background:#3a3a3a;border-radius:6px;padding:5px 12px;font-size:12px;color:#bbb;font-family:system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>`;
 
-  // Editor pane
-  const pane = document.createElement('div');
-  pane.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;';
+  // ── Inline styles for blog typography ──
+  const style = document.createElement('style');
+  style.textContent = `
+    .blog-article h1{font-size:2em;font-weight:800;color:#fff;margin:0 0 .25em;line-height:1.15;}
+    .blog-article h2{font-size:1.3em;font-weight:700;color:#e0e0e0;margin:2em 0 .5em;padding-bottom:.3em;border-bottom:1px solid #222;}
+    .blog-article h3{font-size:1.05em;font-weight:700;color:#ccc;margin:1.5em 0 .4em;}
+    .blog-article p{margin:0 0 1.1em;line-height:1.8;color:#bbb;}
+    .blog-article ul,.blog-article ol{margin:0 0 1.1em;padding-left:1.5em;color:#bbb;}
+    .blog-article li{margin-bottom:.4em;line-height:1.7;}
+    .blog-article blockquote{border-left:3px solid #007acc;margin:0 0 1.1em;padding:.5em 1em;color:#777;font-style:italic;}
+    .blog-article hr{border:none;border-top:1px solid #222;margin:2em 0;}
+    .blog-article code{background:#1a1a1a;color:#ce9178;padding:1px 5px;border-radius:3px;font-size:.88em;font-family:"JetBrains Mono",Consolas,monospace;}
+    .blog-article pre{background:#141414;border:1px solid #222;border-radius:6px;padding:16px;overflow-x:auto;margin:0 0 1.2em;}
+    .blog-article pre code{background:none;padding:0;font-size:13px;color:#9cdcfe;line-height:1.65;}
+    .blog-article a{color:#58a6ff;text-decoration:none;}
+    .blog-article a:hover{text-decoration:underline;}
+    .blog-tag{color:#d7ba7d;}
+    .blog-post-meta{font-size:.85em;color:#555;margin:.25em 0 2em;}`;
 
-  function renderPost(id) {
-    const file = files[id];
-    const lines = file.content.split('\n');
-    pane.innerHTML = '';
+  // ── Content area ──
+  const content = document.createElement('div');
+  content.style.cssText = 'flex:1;overflow-y:auto;background:#0d0d0d;';
 
-    const tabBar = document.createElement('div');
-    tabBar.style.cssText = 'height:35px;background:#2d2d2d;border-bottom:1px solid #1e1e1e;display:flex;align-items:flex-end;flex-shrink:0;';
-    tabBar.innerHTML = `<div style="padding:0 16px;height:35px;background:#1e1e1e;display:flex;align-items:center;font-size:13px;color:#fff;border-top:1px solid #007acc;font-family:system-ui;gap:8px;"><div style="width:12px;height:12px;background:#519aba;border-radius:2px;"></div>${file.name}</div>`;
-
-    const scroll = document.createElement('div');
-    scroll.style.cssText = 'flex:1;display:flex;overflow-y:auto;';
-
-    const lineNums = document.createElement('div');
-    lineNums.style.cssText = 'width:52px;padding:12px 10px 12px 0;text-align:right;font-family:"JetBrains Mono",Consolas,monospace;font-size:14px;line-height:22px;color:#555;border-right:1px solid rgba(255,255,255,0.04);flex-shrink:0;align-self:flex-start;';
-    lineNums.innerHTML = lines.map((_, i) => `<span style="display:block;">${i + 1}</span>`).join('');
-
-    const content = document.createElement('div');
-    content.style.cssText = 'flex:1;padding:12px 20px 60px;font-family:"JetBrains Mono",Consolas,monospace;font-size:14px;line-height:22px;white-space:pre-wrap;word-break:break-word;align-self:flex-start;width:100%;';
-    content.innerHTML = lines.map(line => `<div style="display:block;min-height:22px;">${renderLine(line)}</div>`).join('');
-
-    scroll.appendChild(lineNums);
-    scroll.appendChild(content);
-    pane.appendChild(tabBar);
-    pane.appendChild(scroll);
+  function blogInline(text) {
+    let s = esc(text);
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    s = s.replace(/`(.+?)`/g, '<code>$1</code>');
+    s = s.replace(/→/g, '→');
+    s = s.replace(/\[(active|prototype|draft|unpublished|coming soon)\]/g, '<span class="blog-tag">[$1]</span>');
+    s = s.replace(/\[([^\]]+)\]/g, '<span style="color:#9cdcfe;">[$1]</span>');
+    return s;
   }
 
-  blogIds.forEach(id => {
-    const item = document.createElement('div');
-    item.style.cssText = 'padding:4px 12px 4px 18px;font-size:13px;color:#bbb;cursor:pointer;display:flex;align-items:center;gap:7px;';
-    item.innerHTML = `<span style="width:8px;height:8px;background:#519aba;border-radius:2px;display:inline-block;flex-shrink:0;"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${files[id].name}</span>`;
-    item.addEventListener('click', () => { activeId = id; renderPost(id); });
-    item.addEventListener('mouseover', () => item.style.background = '#2a2d2e');
-    item.addEventListener('mouseout', () => item.style.background = '');
-    sidebar.appendChild(item);
-  });
+  function mdToHtml(md) {
+    const lines = md.split('\n');
+    let out = '', para = [], inUl = false, inOl = false, inPre = false;
 
-  el.appendChild(sidebar);
-  el.appendChild(pane);
-  renderPost(activeId);
+    const flushPara = () => {
+      if (para.length) { const t = para.join(' ').trim(); if (t) out += `<p>${t}</p>`; para = []; }
+    };
+    const closeLists = () => {
+      if (inUl) { out += '</ul>'; inUl = false; }
+      if (inOl) { out += '</ol>'; inOl = false; }
+    };
+
+    for (const line of lines) {
+      if (/^ {4}/.test(line)) {
+        flushPara(); closeLists();
+        if (!inPre) { out += '<pre><code>'; inPre = true; }
+        out += esc(line.slice(4)) + '\n';
+        continue;
+      }
+      if (inPre) { out += '</code></pre>'; inPre = false; }
+
+      if (/^- /.test(line)) {
+        flushPara();
+        if (!inUl) { closeLists(); out += '<ul>'; inUl = true; }
+        out += `<li>${blogInline(line.slice(2))}</li>`;
+        continue;
+      }
+      if (/^\d+\. /.test(line)) {
+        flushPara();
+        if (!inOl) { closeLists(); out += '<ol>'; inOl = true; }
+        const m = line.match(/^\d+\. (.*)/);
+        out += `<li>${blogInline(m[1])}</li>`;
+        continue;
+      }
+      closeLists();
+
+      if (!line.trim()) { flushPara(); continue; }
+      if (/^# /.test(line))   { flushPara(); out += `<h1>${blogInline(line.slice(2))}</h1>`; continue; }
+      if (/^## /.test(line))  { flushPara(); out += `<h2>${blogInline(line.slice(3))}</h2>`; continue; }
+      if (/^### /.test(line)) { flushPara(); out += `<h3>${blogInline(line.slice(4))}</h3>`; continue; }
+      if (/^> /.test(line))   { flushPara(); out += `<blockquote>${blogInline(line.slice(2))}</blockquote>`; continue; }
+      if (/^---+$/.test(line)){ flushPara(); out += '<hr>'; continue; }
+      if (/^\*[^*]/.test(line)){ flushPara(); out += `<p class="blog-post-meta">${esc(line.replace(/^\*|\*$/g, ''))}</p>`; continue; }
+
+      para.push(blogInline(line));
+    }
+    flushPara(); closeLists();
+    if (inPre) out += '</code></pre>';
+    return out;
+  }
+
+  function showPost(id) {
+    const entry = blogEntries.find(e => e.id === id);
+    activeId = id;
+
+    const addr = el.querySelector('#blog-address');
+    if (addr) addr.textContent = `absurdmachine.dev/blog/${entry.slug}`;
+
+    content.innerHTML = '';
+
+    // Site header
+    const header = document.createElement('div');
+    header.style.cssText = 'border-bottom:1px solid #181818;padding:18px 0;';
+    header.innerHTML = `
+      <div style="max-width:700px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:10px;font-family:system-ui;">
+        <span style="font-size:14px;font-weight:700;color:#fff;">The Absurd Machine</span>
+        <span style="color:#444;">/</span>
+        <span style="font-size:13px;color:#007acc;">blog</span>
+        ${blogEntries.length > 1 ? `<span style="color:#444;">/</span><span style="font-size:13px;color:#888;">${files[id].name.replace('.md','')}</span>` : ''}
+      </div>`;
+
+    // Article
+    const article = document.createElement('article');
+    article.className = 'blog-article';
+    article.style.cssText = 'max-width:700px;margin:52px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
+    article.innerHTML = mdToHtml(files[id].content);
+
+    content.appendChild(header);
+    content.appendChild(article);
+    content.scrollTop = 0;
+  }
+
+  el.appendChild(style);
+  el.appendChild(toolbar);
+  el.appendChild(content);
+  showPost(activeId);
   return el;
 }
 
