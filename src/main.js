@@ -341,7 +341,14 @@ function buildTitleBar() {
       <span class="light light-yellow"></span>
       <span class="light light-green"></span>
     </div>
-    <span class="titlebar-title">The Absurd Machine — Portfolio</span>`;
+    <span class="titlebar-title">The Absurd Machine — Portfolio</span>
+    <div class="hamburger" id="hamburger" title="Toggle Explorer">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <rect x="1" y="3" width="16" height="2" rx="1"/>
+        <rect x="1" y="8" width="16" height="2" rx="1"/>
+        <rect x="1" y="13" width="16" height="2" rx="1"/>
+      </svg>
+    </div>`;
   return el;
 }
 
@@ -613,6 +620,7 @@ function renderStatusBar() {
 function openFile(id) {
   if (!state.openTabs.includes(id)) state.openTabs.push(id);
   state.activeTab = id;
+  closeMobileSidebar();
   renderAll();
 }
 
@@ -684,11 +692,23 @@ function boot() {
 // INIT
 // ===========================
 
+function closeMobileSidebar() {
+  document.getElementById('sidebar')?.classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay')?.classList.remove('open');
+}
+
 function init() {
   const app = document.getElementById('app');
 
   app.appendChild(buildTitleBar());
   app.appendChild(buildMenuBar());
+
+  // Overlay for mobile sidebar
+  const overlay = document.createElement('div');
+  overlay.className = 'sidebar-overlay';
+  overlay.id = 'sidebar-overlay';
+  overlay.addEventListener('click', closeMobileSidebar);
+  app.appendChild(overlay);
 
   const workbench = document.createElement('div');
   workbench.className = 'workbench';
@@ -698,6 +718,19 @@ function init() {
   app.appendChild(workbench);
 
   app.appendChild(buildStatusBar());
+
+  // Hamburger toggle
+  document.getElementById('hamburger')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const isOpen = sidebar?.classList.contains('mobile-open');
+    if (isOpen) {
+      closeMobileSidebar();
+    } else {
+      sidebar?.classList.add('mobile-open');
+      sidebarOverlay?.classList.add('open');
+    }
+  });
 
   renderAll();
 }

@@ -425,3 +425,75 @@ body {
   white-space: nowrap;
 }
 .sb-item:hover { background: rgba(255,255,255,0.15); }
+
+/* ===== HAMBURGER ===== */
+.hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  width: 32px;
+  height: 24px;
+  cursor: pointer;
+  color: var(--text-dim);
+  border-radius: 3px;
+}
+.hamburger:hover { background: rgba(255,255,255,0.1); color: var(--text-white); }
+
+/* ===== SIDEBAR OVERLAY ===== */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+.sidebar-overlay.open { display: block; }
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  /* show hamburger, hide non-essentials */
+  .hamburger   { display: flex; }
+  .activity-bar { display: none; }
+  .menubar      { display: none; }
+  .minimap      { display: none; }
+  .breadcrumb   { display: none; }
+
+  /* sidebar slides in as overlay */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: none;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.6);
+  }
+
+  /* tighter editor */
+  .line-numbers {
+    width: 40px;
+    font-size: 12px;
+    padding-right: 6px;
+  }
+  .editor-content {
+    font-size: 13px;
+    padding: 10px 12px 60px;
+  }
+
+  /* bigger touch targets on tabs */
+  .tab { min-width: 100px; padding: 0 8px 0 10px; }
+
+  /* always show close button on mobile */
+  .tab-close { opacity: 1; }
+
+  /* status bar: hide git info on tiny screens */
+  .statusbar-left { display: none; }
+
+  /* title bar stays full width */
+  .titlebar-title { font-size: 11px; }
+}
+
