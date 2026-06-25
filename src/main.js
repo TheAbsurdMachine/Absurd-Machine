@@ -277,6 +277,8 @@ const state = {
   activeTab: 'readme',
   openFolders: new Set(['projects']),
   cursorLine: 1,
+  windowOpen: true,
+  windowMaximized: false,
 };
 
 // ===========================
@@ -289,19 +291,13 @@ function esc(str) {
 
 function renderInline(raw) {
   let s = esc(raw);
-  // Bold
   s = s.replace(/\*\*(.+?)\*\*/g, '<span class="syn-bold">**$1**</span>');
-  // Inline code
   s = s.replace(/`(.+?)`/g, '<span class="syn-inline-code">`$1`</span>');
-  // Status tags
   s = s.replace(/\[(active)\]/g, '<span class="syn-bracket status-active">[$1]</span>');
   s = s.replace(/\[(prototype)\]/g, '<span class="syn-bracket status-prototype">[$1]</span>');
   s = s.replace(/\[(draft|unpublished)\]/g, '<span class="syn-bracket status-draft">[$1]</span>');
-  // Other brackets
   s = s.replace(/\[([^\]]+)\]/g, '<span class="syn-bracket">[$1]</span>');
-  // Arrows
   s = s.replace(/→/g, '<span class="syn-arrow">→</span>');
-  // GitHub links
   s = s.replace(/(github\.com\/[^\s<]+)/g, '<span class="syn-link">$1</span>');
   return s;
 }
@@ -314,9 +310,7 @@ function renderLine(line) {
   if (/^> /.test(line))   return `<span class="syn-blockquote">${esc(line)}</span>`;
   if (/^\*[^*]/.test(line)) return `<span class="syn-italic">${esc(line)}</span>`;
   if (/^---+$/.test(line))  return `<span class="syn-hr">${esc(line)}</span>`;
-  if (/^\/\//.test(line.trim())) return `<span class="syn-comment">${esc(line)}</span>`;
   if (/^ {4}/.test(line)) {
-    // Inline comment detection
     const s = esc(line).replace(/\/\/ (.+)$/, '<span class="syn-comment">// $1</span>');
     return `<span class="syn-codeblock">${s}</span>`;
   }
@@ -329,28 +323,8 @@ function renderLine(line) {
 }
 
 // ===========================
-// BUILD DOM
+// IDE BUILDERS (shared)
 // ===========================
-
-function buildTitleBar() {
-  const el = document.createElement('div');
-  el.className = 'titlebar';
-  el.innerHTML = `
-    <div class="traffic-lights">
-      <span class="light light-red"></span>
-      <span class="light light-yellow"></span>
-      <span class="light light-green"></span>
-    </div>
-    <span class="titlebar-title">The Absurd Machine — Portfolio</span>
-    <div class="hamburger" id="hamburger" title="Toggle Explorer">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-        <rect x="1" y="3" width="16" height="2" rx="1"/>
-        <rect x="1" y="8" width="16" height="2" rx="1"/>
-        <rect x="1" y="13" width="16" height="2" rx="1"/>
-      </svg>
-    </div>`;
-  return el;
-}
 
 function buildMenuBar() {
   const el = document.createElement('div');
@@ -367,13 +341,11 @@ function buildMenuBar() {
 function buildActivityBar() {
   const el = document.createElement('div');
   el.className = 'activity-bar';
-
   const icons = [
     { title: 'Explorer', active: true, svg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4a1 1 0 011-1h5l2 2h9a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v11h14V7h-8.586L8.586 5H5z"/></svg>` },
     { title: 'Search', svg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10.5 3a7.5 7.5 0 015.645 12.438l4.208 4.208-1.414 1.414-4.208-4.208A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z"/></svg>` },
     { title: 'Source Control', svg: `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a3 3 0 110 5.83V11h5a2 2 0 012 2v.17A3 3 0 1118 16.83V13h-5v3.17A3 3 0 1110 13v-2H5a2 2 0 01-2-2V8.83A3 3 0 118 5.17V8h2V5.83A3 3 0 0113 3zm0 2a1 1 0 100 2 1 1 0 000-2zM6 15a1 1 0 100 2 1 1 0 000-2zm12 0a1 1 0 100 2 1 1 0 000-2z"/></svg>` },
   ];
-
   icons.forEach(({ title, svg, active }) => {
     const btn = document.createElement('div');
     btn.className = `activity-icon${active ? ' active' : ''}`;
@@ -381,7 +353,6 @@ function buildActivityBar() {
     btn.innerHTML = svg;
     el.appendChild(btn);
   });
-
   return el;
 }
 
@@ -434,8 +405,7 @@ function buildEditorArea() {
   editor.appendChild(minimap);
 
   scrollArea.addEventListener('scroll', () => {
-    const line = Math.floor(scrollArea.scrollTop / 22) + 1;
-    state.cursorLine = line;
+    state.cursorLine = Math.floor(scrollArea.scrollTop / 22) + 1;
     renderStatusBar();
   });
 
@@ -463,15 +433,12 @@ function renderFileTree() {
 
   function renderNode(node, depth) {
     const indent = 8 + depth * 14;
-
     if (node.type === 'folder') {
       const isOpen = state.openFolders.has(node.name);
       const folder = document.createElement('div');
       folder.className = 'tree-folder';
       folder.style.paddingLeft = `${indent}px`;
-      folder.innerHTML = `
-        <span class="tree-chevron">${isOpen ? '▼' : '▶'}</span>
-        <span class="tree-name">${node.name}</span>`;
+      folder.innerHTML = `<span class="tree-chevron">${isOpen ? '▼' : '▶'}</span><span class="tree-name">${node.name}</span>`;
       folder.addEventListener('click', () => toggleFolder(node.name));
       tree.appendChild(folder);
       if (isOpen) node.children.forEach(c => renderNode(c, depth + 1));
@@ -492,27 +459,16 @@ function renderTabs() {
   const bar = document.getElementById('tab-bar');
   if (!bar) return;
   bar.innerHTML = '';
-
   state.openTabs.forEach(id => {
     const file = files[id];
     if (!file) return;
-
     const tab = document.createElement('div');
     tab.className = `tab${state.activeTab === id ? ' active' : ''}`;
-    tab.innerHTML = `
-      <div class="tab-icon"></div>
-      <span class="tab-name">${file.name}</span>
-      <span class="tab-close">×</span>`;
-
+    tab.innerHTML = `<div class="tab-icon"></div><span class="tab-name">${file.name}</span><span class="tab-close">×</span>`;
     tab.addEventListener('click', e => {
-      if (e.target.classList.contains('tab-close')) {
-        e.stopPropagation();
-        closeTab(id);
-      } else {
-        setActiveTab(id);
-      }
+      if (e.target.classList.contains('tab-close')) { e.stopPropagation(); closeTab(id); }
+      else setActiveTab(id);
     });
-
     bar.appendChild(tab);
   });
 }
@@ -520,10 +476,8 @@ function renderTabs() {
 function renderBreadcrumb() {
   const el = document.getElementById('breadcrumb');
   if (!el) return;
-
   const file = files[state.activeTab];
   if (!file) { el.innerHTML = ''; return; }
-
   const parts = ['The-Absurd-Machine'];
   for (const node of fileTree) {
     if (node.type === 'folder') {
@@ -533,7 +487,6 @@ function renderBreadcrumb() {
     }
   }
   parts.push(file.name);
-
   el.innerHTML = parts.map((p, i) =>
     `<span class="${i === parts.length - 1 ? 'bc-item bc-active' : 'bc-item'}">${p}</span>${i < parts.length - 1 ? '<span class="bc-sep">›</span>' : ''}`
   ).join('');
@@ -546,19 +499,10 @@ function renderEditorContent() {
   if (!lineNums || !content) return;
 
   const file = files[state.activeTab];
-  if (!file) {
-    lineNums.innerHTML = '';
-    content.innerHTML = '';
-    renderMinimap(null);
-    return;
-  }
+  if (!file) { lineNums.innerHTML = ''; content.innerHTML = ''; renderMinimap(null); return; }
 
   const lines = file.content.split('\n');
-
-  lineNums.innerHTML = lines.map((_, i) =>
-    `<span class="line-num">${i + 1}</span>`
-  ).join('');
-
+  lineNums.innerHTML = lines.map((_, i) => `<span class="line-num">${i + 1}</span>`).join('');
   content.innerHTML = lines.map((line, i) =>
     `<div class="editor-line" data-line="${i + 1}">${renderLine(line)}</div>`
   ).join('');
@@ -573,18 +517,17 @@ function renderMinimap(lines) {
   const el = document.getElementById('minimap');
   if (!el) return;
   if (!lines) { el.innerHTML = ''; return; }
-
   el.innerHTML = '<div class="minimap-content">' +
     lines.map(line => {
       if (!line.trim()) return '<div class="mini-line" style="width:0"></div>';
       let color = '#404040', width = '70%';
-      if (/^# /.test(line))   { color = '#4fc1ff'; width = '75%'; }
-      else if (/^## /.test(line))  { color = '#9cdcfe'; width = '60%'; }
-      else if (/^### /.test(line)) { color = '#ce9178'; width = '50%'; }
-      else if (/^> /.test(line))   { color = '#6a9955'; width = '80%'; }
-      else if (/^- /.test(line))   { color = '#569cd6'; width = '72%'; }
+      if (/^# /.test(line))   { color = '#4fc1ff'; width = '80%'; }
+      else if (/^## /.test(line))  { color = '#9cdcfe'; width = '65%'; }
+      else if (/^### /.test(line)) { color = '#ce9178'; width = '55%'; }
+      else if (/^> /.test(line))   { color = '#6a9955'; width = '85%'; }
+      else if (/^- /.test(line))   { color = '#569cd6'; width = '75%'; }
       else if (/^---/.test(line))  { color = '#2a2a2a'; width = '100%'; }
-      else if (/^ {4}/.test(line)) { color = '#9cdcfe'; width = '55%'; }
+      else if (/^ {4}/.test(line)) { color = '#9cdcfe'; width = '60%'; }
       return `<div class="mini-line" style="background:${color};width:${width}"></div>`;
     }).join('') +
   '</div>';
@@ -593,11 +536,9 @@ function renderMinimap(lines) {
 function renderStatusBar() {
   const el = document.getElementById('statusbar');
   if (!el) return;
-
   const file = files[state.activeTab];
   const lineCount = file ? file.content.split('\n').length : 0;
   const lang = file ? 'Markdown' : 'plaintext';
-
   el.innerHTML = `
     <div class="statusbar-left">
       <div class="sb-item">
@@ -614,9 +555,21 @@ function renderStatusBar() {
     </div>`;
 }
 
+function renderAll() {
+  renderTabs();
+  renderBreadcrumb();
+  renderEditorContent();
+  renderFileTree();
+}
+
 // ===========================
-// ACTIONS
+// IDE ACTIONS
 // ===========================
+
+function closeMobileSidebar() {
+  document.getElementById('sidebar')?.classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay')?.classList.remove('open');
+}
 
 function openFile(id) {
   if (!state.openTabs.includes(id)) state.openTabs.push(id);
@@ -629,9 +582,7 @@ function closeTab(id) {
   const idx = state.openTabs.indexOf(id);
   if (idx === -1) return;
   state.openTabs.splice(idx, 1);
-  if (state.activeTab === id) {
-    state.activeTab = state.openTabs[Math.max(0, idx - 1)] || null;
-  }
+  if (state.activeTab === id) state.activeTab = state.openTabs[Math.max(0, idx - 1)] || null;
   renderAll();
 }
 
@@ -645,21 +596,284 @@ function toggleFolder(name) {
   renderFileTree();
 }
 
-function renderAll() {
-  renderTabs();
-  renderBreadcrumb();
-  renderEditorContent();
-  renderFileTree();
+// ===========================
+// WINDOW ACTIONS (desktop)
+// ===========================
+
+function toggleMaximize(win) {
+  state.windowMaximized = !state.windowMaximized;
+  if (state.windowMaximized) {
+    win._preMax = { top: win.style.top, left: win.style.left, width: win.style.width, height: win.style.height };
+    win.style.transition = 'top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease, border-radius 0.2s ease';
+    win.classList.add('maximized');
+  } else {
+    win.style.transition = 'top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease, border-radius 0.2s ease';
+    win.classList.remove('maximized');
+    if (win._preMax) {
+      Object.assign(win.style, win._preMax);
+    }
+    setTimeout(() => win.style.transition = '', 200);
+  }
+}
+
+function closeWindow(win) {
+  state.windowOpen = false;
+  win.style.transition = 'opacity 0.18s, transform 0.18s';
+  win.style.opacity = '0';
+  win.style.transform = 'scale(0.96) translateY(8px)';
+  setTimeout(() => { win.style.display = 'none'; }, 200);
+  document.getElementById('dock-dot')?.classList.add('hidden');
+}
+
+function revealWindow(win) {
+  state.windowOpen = true;
+  win.style.display = 'flex';
+  win.style.opacity = '0';
+  win.style.transform = 'scale(0.96) translateY(8px)';
+  requestAnimationFrame(() => {
+    win.style.transition = 'opacity 0.18s, transform 0.18s';
+    win.style.opacity = '1';
+    win.style.transform = 'scale(1) translateY(0)';
+  });
+  document.getElementById('dock-dot')?.classList.remove('hidden');
 }
 
 // ===========================
-// BOOT SCREEN
+// DESKTOP BUILDERS
 // ===========================
 
-function boot() {
+function buildWallpaper() {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'wallpaper';
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+  function draw() {
+    ctx.fillStyle = '#080810';
+    ctx.fillRect(0, 0, w, h);
+    const spacing = 44;
+    for (let x = spacing / 2; x < w; x += spacing) {
+      for (let y = spacing / 2; y < h; y += spacing) {
+        const dx = x - w / 2, dy = y - h / 2;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const wave = (Math.sin(dist / 110 - t) + 1) / 2;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 122, 204, ${wave * 0.13 + 0.02})`;
+        ctx.fill();
+      }
+    }
+    t += 0.012;
+    requestAnimationFrame(draw);
+  }
+  draw();
+  return canvas;
+}
+
+function buildDesktopMenubar() {
+  const el = document.createElement('div');
+  el.className = 'desktop-menubar';
+  el.innerHTML = `
+    <div class="dmb-left">
+      <span class="dmb-logo">⌘</span>
+      <span class="dmb-brand">The Absurd Machine</span>
+      <span class="dmb-item">Portfolio</span>
+      <span class="dmb-item">Projects</span>
+      <span class="dmb-item">Blog</span>
+    </div>
+    <div class="dmb-right">
+      <span id="desktop-time" class="dmb-time"></span>
+    </div>`;
+  const timeEl = el.querySelector('#desktop-time');
+  function tick() { timeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+  tick();
+  setInterval(tick, 10000);
+  return el;
+}
+
+function buildIdeWindow() {
+  const win = document.createElement('div');
+  win.className = 'ide-window';
+  win.id = 'ide-window';
+
+  const winW = Math.min(window.innerWidth * 0.82, 1100);
+  const winH = window.innerHeight * 0.80;
+  const left = (window.innerWidth - winW) / 2;
+  const top = 28 + (window.innerHeight - 28 - winH) / 2;
+
+  win.style.cssText = `width:${winW}px;height:${winH}px;left:${left}px;top:${top}px;`;
+
+  // Title bar
+  const titlebar = document.createElement('div');
+  titlebar.className = 'window-titlebar';
+  titlebar.innerHTML = `
+    <div class="traffic-lights">
+      <span class="light light-red"></span>
+      <span class="light light-yellow"></span>
+      <span class="light light-green"></span>
+    </div>
+    <span class="titlebar-title">The Absurd Machine — Portfolio</span>`;
+
+  titlebar.querySelector('.light-red').addEventListener('click', e => { e.stopPropagation(); closeWindow(win); });
+  titlebar.querySelector('.light-yellow').addEventListener('click', e => { e.stopPropagation(); closeWindow(win); });
+  titlebar.querySelector('.light-green').addEventListener('click', e => { e.stopPropagation(); toggleMaximize(win); });
+
+  // IDE content
+  const body = document.createElement('div');
+  body.className = 'window-body';
+  body.appendChild(buildMenuBar());
+
+  const workbench = document.createElement('div');
+  workbench.className = 'workbench';
+  workbench.appendChild(buildActivityBar());
+  workbench.appendChild(buildSidebar());
+  workbench.appendChild(buildEditorArea());
+  body.appendChild(workbench);
+  body.appendChild(buildStatusBar());
+
+  win.appendChild(titlebar);
+  win.appendChild(body);
+
+  makeDraggable(win, titlebar);
+  return win;
+}
+
+function buildDock(win) {
+  const dock = document.createElement('div');
+  dock.className = 'dock';
+
+  // Portfolio IDE
+  const ideItem = document.createElement('div');
+  ideItem.className = 'dock-item';
+  ideItem.innerHTML = `
+    <div class="dock-tooltip">Portfolio IDE</div>
+    <div class="dock-icon" style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:17px;color:#007acc;font-weight:700">&lt;/&gt;</span>
+    </div>
+    <div class="dock-dot" id="dock-dot"></div>`;
+  ideItem.addEventListener('click', () => {
+    if (!state.windowOpen) revealWindow(win);
+  });
+
+  // GitHub
+  const ghItem = document.createElement('div');
+  ghItem.className = 'dock-item';
+  ghItem.innerHTML = `
+    <div class="dock-tooltip">GitHub</div>
+    <div class="dock-icon" style="background:#161b22;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#e6edf3"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+    </div>
+    <div class="dock-dot hidden"></div>`;
+  ghItem.addEventListener('click', () => window.open('https://github.com/TheAbsurdMachine', '_blank'));
+
+  dock.appendChild(ideItem);
+  dock.appendChild(ghItem);
+  return dock;
+}
+
+function makeDraggable(win, handle) {
+  let startX, startY, startL, startT, dragging = false;
+  handle.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('light') || state.windowMaximized) return;
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startL = win.offsetLeft; startT = win.offsetTop;
+    win.style.transition = 'none';
+    const onMove = e => {
+      if (!dragging) return;
+      win.style.left = `${startL + e.clientX - startX}px`;
+      win.style.top = `${Math.max(28, startT + e.clientY - startY)}px`;
+    };
+    const onUp = () => { dragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+// ===========================
+// MOBILE INIT
+// ===========================
+
+function initMobile() {
+  const app = document.getElementById('app');
+
+  const titlebar = document.createElement('div');
+  titlebar.className = 'titlebar';
+  titlebar.innerHTML = `
+    <div class="traffic-lights">
+      <span class="light light-red"></span>
+      <span class="light light-yellow"></span>
+      <span class="light light-green"></span>
+    </div>
+    <span class="titlebar-title">The Absurd Machine</span>
+    <div class="hamburger" id="hamburger">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+        <rect x="1" y="3" width="16" height="2" rx="1"/>
+        <rect x="1" y="8" width="16" height="2" rx="1"/>
+        <rect x="1" y="13" width="16" height="2" rx="1"/>
+      </svg>
+    </div>`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'sidebar-overlay';
+  overlay.id = 'sidebar-overlay';
+  overlay.addEventListener('click', closeMobileSidebar);
+
+  const workbench = document.createElement('div');
+  workbench.className = 'workbench';
+  workbench.appendChild(buildActivityBar());
+  workbench.appendChild(buildSidebar());
+  workbench.appendChild(buildEditorArea());
+
+  app.appendChild(titlebar);
+  app.appendChild(overlay);
+  app.appendChild(workbench);
+  app.appendChild(buildStatusBar());
+
+  document.getElementById('hamburger')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    sidebar?.classList.contains('mobile-open') ? closeMobileSidebar() : (sidebar?.classList.add('mobile-open'), sidebarOverlay?.classList.add('open'));
+  });
+
+  renderAll();
+}
+
+// ===========================
+// DESKTOP INIT
+// ===========================
+
+function initDesktop() {
+  const app = document.getElementById('app');
+  app.style.cssText = 'position:fixed;inset:0;overflow:hidden;';
+
+  const desktop = document.createElement('div');
+  desktop.className = 'desktop';
+
+  desktop.appendChild(buildWallpaper());
+  desktop.appendChild(buildDesktopMenubar());
+
+  const win = buildIdeWindow();
+  desktop.appendChild(win);
+  desktop.appendChild(buildDock(win));
+
+  app.appendChild(desktop);
+  renderAll();
+}
+
+// ===========================
+// BOOT
+// ===========================
+
+function boot(onComplete) {
   const screen = document.createElement('div');
   screen.className = 'boot-screen';
-
   const content = document.createElement('div');
   content.className = 'boot-content';
   screen.appendChild(content);
@@ -683,58 +897,16 @@ function boot() {
 
   setTimeout(() => {
     screen.style.opacity = '0';
-    setTimeout(() => {
-      screen.remove();
-    }, 500);
-  }, 1300);
+    setTimeout(() => { screen.remove(); onComplete(); }, 500);
+  }, 1400);
 }
 
 // ===========================
-// INIT
+// MAIN
 // ===========================
 
-function closeMobileSidebar() {
-  document.getElementById('sidebar')?.classList.remove('mobile-open');
-  document.getElementById('sidebar-overlay')?.classList.remove('open');
-}
-
-function init() {
-  const app = document.getElementById('app');
-
-  app.appendChild(buildTitleBar());
-  app.appendChild(buildMenuBar());
-
-  // Overlay for mobile sidebar
-  const overlay = document.createElement('div');
-  overlay.className = 'sidebar-overlay';
-  overlay.id = 'sidebar-overlay';
-  overlay.addEventListener('click', closeMobileSidebar);
-  app.appendChild(overlay);
-
-  const workbench = document.createElement('div');
-  workbench.className = 'workbench';
-  workbench.appendChild(buildActivityBar());
-  workbench.appendChild(buildSidebar());
-  workbench.appendChild(buildEditorArea());
-  app.appendChild(workbench);
-
-  app.appendChild(buildStatusBar());
-
-  // Hamburger toggle
-  document.getElementById('hamburger')?.addEventListener('click', () => {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const isOpen = sidebar?.classList.contains('mobile-open');
-    if (isOpen) {
-      closeMobileSidebar();
-    } else {
-      sidebar?.classList.add('mobile-open');
-      sidebarOverlay?.classList.add('open');
-    }
-  });
-
-  renderAll();
-}
-
-boot();
-setTimeout(init, 100);
+const isMobile = window.innerWidth < 768;
+boot(() => {
+  if (isMobile) initMobile();
+  else initDesktop();
+});
