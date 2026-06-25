@@ -388,6 +388,7 @@ function buildActivityBar() {
 function buildSidebar() {
   const el = document.createElement('div');
   el.className = 'sidebar';
+  el.id = 'sidebar';
   el.innerHTML = `
     <div class="sidebar-header">Explorer</div>
     <div class="sidebar-repo">The-Absurd-Machine</div>
