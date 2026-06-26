@@ -23,7 +23,7 @@ Most answers are wrong. That's the point.
 ## Active Projects
 
 - **Neon Void**    [active]      arcade space shooter · live at mayphex.com
-- **ByteBrawn**    [active]      fitness tracking with no excuses
+- **ByteBrawn**    [prototype]   great name. concept TBD.
 - **Mayphex**      [prototype]   scheduling, probably
 
 ---
@@ -118,58 +118,48 @@ Clean boundary between play and train.`
     name: 'byte-brawn.md',
     content: `# ByteBrawn
 
-**Status:** [active]
+**Status:** [prototype]
 **Repo:** github.com/TheAbsurdMachine/ByteBrawn
-**Stack:** Vanilla JS · No backend · PWA
+**Stack:** Three.js · parked
 
 ---
 
 ## What Is It?
 
-Fitness tracking with no excuses.
-No subscriptions. No social features. No gamification.
+Right now: a Three.js site with a great name and nothing else.
 
-Just: did you lift today, or not?
-
----
-
-## Why?
-
-Every fitness app wants to be your coach, your community, your therapist.
-
-Most people just need a log. One that doesn't require an account to
-remember that you did 3×10 squats on Tuesday.
-
-ByteBrawn is that log.
+That's not a failure state. That's the beginning of one.
 
 ---
 
-## Principles
+## The Name Came First
 
-- Local-first. Your data stays on your device.
-- No account required. No server. No cloud sync.
-- Fast. Loads instantly. Works offline.
-- Honest. Tracks what you did, not what the app wants you to do.
+ByteBrawn is a case of the name arriving before the thing.
+
+Some projects start with a problem. Some start with a solution.
+This one started with a word that felt right — and now the
+question is what deserves to live under it.
+
+The name implies strength, data, physicality. It has weight.
+Whatever gets built here has to earn it.
 
 ---
 
 ## Current State
 
-- Core tracking works
-- localStorage persistence
-- Basic session history
-
-Coming next: data export, PR (personal record) tracking, graph view.
+- Parked Three.js scene
+- The name is claimed
+- The concept is not
 
 ---
 
-## Stack
+## What Comes Next
 
-- Vanilla JS — no framework
-- localStorage for persistence
-- PWA manifest for mobile install
+The site exists. The name is right. The question is:
+what problem is sharp enough to deserve this name?
 
-The point is it could be a single HTML file and work fine.`
+That question is still open. This page is a placeholder
+for the answer.`
   },
 
   mayphex: {
@@ -297,13 +287,16 @@ The post forced me to articulate why the ML training environment
 mattered — which forced me to actually build the observation/action
 API properly, not just gesture at it.
 
-**ByteBrawn** started as frustration. Every fitness app wants to
-coach you. Sometimes you just want a log. The prototype was a
-single text input and a submit button. The constraints came later,
-from writing about why each decision was made.
+**ByteBrawn** started as a name. Not a problem, not a product —
+just a word that arrived and felt too right to ignore.
 
-The pattern holds: the project gets better in the writing,
-not just in the building.
+The Three.js site went up to claim the territory. The concept
+hasn't arrived yet. That's fine. Some of the best projects start
+this way: the name comes first, and the name is a promise
+you spend the next year figuring out how to keep.
+
+The pattern holds: sometimes the writing comes before the building.
+You ship the name, and the name tells you what to build.
 
 ---
 
@@ -1066,7 +1059,7 @@ function buildBlogContent(initialSlug = null) {
 function buildProjectsContent(initialSlug = null) {
   const projectEntries = [
     { id: 'neon-void',   slug: 'neon-void',   title: 'Neon Void',   date: '2024' },
-    { id: 'byte-brawn',  slug: 'byte-brawn',  title: 'ByteBrawn',   date: '2024' },
+    { id: 'byte-brawn',  slug: 'byte-brawn',  title: 'ByteBrawn',   date: '2025' },
     { id: 'mayphex',     slug: 'mayphex',     title: 'Mayphex',     date: '2025' },
   ];
 
