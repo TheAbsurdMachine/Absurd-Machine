@@ -714,7 +714,7 @@ function openAppWindow({ id, title, width, height, buildContent, offset = { x: 0
 // ===========================
 
 
-function buildBlogContent() {
+function buildBlogContent(initialSlug = null) {
   const blogEntries = [
     {
       id: 'post-1',
@@ -749,7 +749,7 @@ function buildBlogContent() {
 
   const addrBar = document.createElement('div');
   addrBar.style.cssText = 'flex:1;background:#3a3a3a;border-radius:6px;padding:5px 12px;font-size:12px;color:#bbb;font-family:system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-  addrBar.textContent = 'absurdmachine.dev/blog';
+  addrBar.textContent = 'https://TheAbsurdMachine.com/blog';
 
   toolbar.appendChild(backBtn);
   toolbar.appendChild(fwdBtn);
@@ -774,9 +774,8 @@ function buildBlogContent() {
     .blog-article a:hover{text-decoration:underline;}
     .blog-tag{color:#d7ba7d;}
     .blog-post-meta{font-size:.85em;color:#555;margin:.25em 0 2em;}
-    .blog-index-item{border-top:1px solid #1a1a1a;padding:22px 0;cursor:pointer;transition:background 0.1s;}
-    .blog-index-item:hover{background:rgba(255,255,255,0.02);}
-    .blog-index-title{font-size:1.05em;font-weight:700;color:#ddd;transition:color 0.1s;}
+    .blog-index-item{border-top:1px solid #1a1a1a;padding:22px 0;cursor:pointer;}
+    .blog-index-title{font-size:25px;font-weight:700;color:#ddd;transition:color 0.15s;}
     .blog-index-item:hover .blog-index-title{color:#fff;}`;
 
   // ── Content area ──
@@ -788,38 +787,46 @@ function buildBlogContent() {
     backBtn.style.cursor = isHome ? 'default' : 'pointer';
   }
 
-  function siteHeader(crumbs) {
+  function siteHeader() {
     const d = document.createElement('div');
     d.style.cssText = 'border-bottom:1px solid #181818;padding:18px 0;flex-shrink:0;';
-    d.innerHTML = `<div style="max-width:700px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:8px;font-family:system-ui;">
-      <span style="font-size:14px;font-weight:700;color:#fff;">The Absurd Machine</span>
-      ${crumbs.map(c => `<span style="color:#444;">/</span><span style="font-size:13px;color:${c.color || '#888'};">${c.label}</span>`).join('')}
-    </div>`;
+    const inner = document.createElement('div');
+    inner.style.cssText = 'max-width:700px;margin:0 auto;padding:0 28px;font-family:system-ui;display:flex;align-items:center;justify-content:space-between;';
+    const brand = document.createElement('span');
+    brand.textContent = 'The Absurd Machine';
+    brand.style.cssText = 'font-size:25px;font-weight:700;color:#fff;cursor:pointer;';
+    brand.addEventListener('click', showHome);
+    const aboutLink = document.createElement('span');
+    aboutLink.textContent = 'About';
+    aboutLink.style.cssText = 'font-size:13px;font-weight:700;color:#666;cursor:pointer;transition:color 0.15s;';
+    aboutLink.addEventListener('mouseover', () => aboutLink.style.color = '#ccc');
+    aboutLink.addEventListener('mouseout', () => aboutLink.style.color = '#666');
+    aboutLink.addEventListener('click', showAbout);
+    inner.appendChild(brand);
+    inner.appendChild(aboutLink);
+    d.appendChild(inner);
     return d;
   }
 
   function showHome() {
     currentView = 'home';
     setToolbar(true);
-    addrBar.textContent = 'absurdmachine.dev/blog';
+    addrBar.textContent = 'https://TheAbsurdMachine.com/blog';
+    history.pushState({}, '', '/blog');
     content.innerHTML = '';
 
-    content.appendChild(siteHeader([{ label: 'blog', color: '#007acc' }]));
+    content.appendChild(siteHeader());
 
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'max-width:700px;margin:44px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
-    wrap.innerHTML = `<h1 style="font-size:1.5em;font-weight:800;color:#fff;margin:0 0 6px;">Writing</h1>
-      <p style="color:#555;font-size:13px;margin:0 0 36px;line-height:1.6;">Notes on building things that shouldn't exist.</p>`;
+    wrap.style.cssText = 'max-width:700px;margin:24px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
+    wrap.innerHTML = `<h1 style="font-size:27px;font-weight:700;color:#fff;margin:0 0 20px;">Posts</h1>`;
 
     blogEntries.forEach(entry => {
       const item = document.createElement('div');
       item.className = 'blog-index-item';
       item.innerHTML = `
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;">
-          <span class="blog-index-title">${entry.title}</span>
-          <span style="font-size:11px;color:#555;white-space:nowrap;margin-left:20px;">${entry.date}</span>
-        </div>
-        <p style="margin:0;font-size:13px;color:#666;line-height:1.65;">${entry.desc}</p>`;
+        <span style="font-size:11px;color:#555;display:block;margin-bottom:5px;">${entry.date}</span>
+        <span class="blog-index-title">${entry.title}</span>`;
       item.addEventListener('click', () => showPost(entry.id));
       wrap.appendChild(item);
     });
@@ -868,13 +875,29 @@ function buildBlogContent() {
     const entry = blogEntries.find(e => e.id === id);
     currentView = id;
     setToolbar(false);
-    addrBar.textContent = `absurdmachine.dev/blog/${entry.slug}`;
+    addrBar.textContent = `https://TheAbsurdMachine.com/blog/${entry.slug}`;
+    history.pushState({}, '', `/blog/${entry.slug}`);
     content.innerHTML = '';
-    content.appendChild(siteHeader([{ label: 'blog', color: '#007acc' }, { label: entry.title }]));
+    content.appendChild(siteHeader());
     const article = document.createElement('article');
     article.className = 'blog-article';
     article.style.cssText = 'max-width:700px;margin:52px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
     article.innerHTML = mdToHtml(files[id].content);
+    content.appendChild(article);
+    content.scrollTop = 0;
+  }
+
+  function showAbout() {
+    currentView = 'about';
+    setToolbar(false);
+    addrBar.textContent = 'https://TheAbsurdMachine.com/about';
+    history.pushState({}, '', '/about');
+    content.innerHTML = '';
+    content.appendChild(siteHeader());
+    const article = document.createElement('article');
+    article.className = 'blog-article';
+    article.style.cssText = 'max-width:700px;margin:52px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
+    article.innerHTML = mdToHtml(files['about'].content);
     content.appendChild(article);
     content.scrollTop = 0;
   }
@@ -885,7 +908,204 @@ function buildBlogContent() {
   el.appendChild(style);
   el.appendChild(toolbar);
   el.appendChild(content);
-  showHome();
+  if (initialSlug) {
+    const entry = blogEntries.find(e => e.slug === initialSlug);
+    entry ? showPost(entry.id) : showHome();
+  } else {
+    showHome();
+  }
+  return el;
+}
+
+function buildProjectsContent(initialSlug = null) {
+  const projectEntries = [
+    { id: 'neon-void',   slug: 'neon-void',   title: 'Neon Void',   date: '2024' },
+    { id: 'byte-brawn',  slug: 'byte-brawn',  title: 'ByteBrawn',   date: '2024' },
+    { id: 'mayphex',     slug: 'mayphex',     title: 'Mayphex',     date: '2025' },
+  ];
+
+  let currentView = 'home';
+
+  const el = document.createElement('div');
+  el.style.cssText = 'display:flex;flex-direction:column;height:100%;background:#111;overflow:hidden;';
+
+  const toolbar = document.createElement('div');
+  toolbar.style.cssText = 'height:40px;background:#2a2a2a;border-bottom:1px solid #111;display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0;';
+
+  const backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:none;border:none;color:#444;font-size:17px;cursor:default;padding:4px 6px;line-height:1;';
+  backBtn.textContent = '←';
+
+  const fwdBtn = document.createElement('button');
+  fwdBtn.style.cssText = 'background:none;border:none;color:#444;font-size:17px;cursor:default;padding:4px 6px;line-height:1;';
+  fwdBtn.textContent = '→';
+
+  const homeBtn = document.createElement('button');
+  homeBtn.title = 'Home';
+  homeBtn.style.cssText = 'background:none;border:none;color:#888;font-size:15px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;';
+  homeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>`;
+
+  const addrBar = document.createElement('div');
+  addrBar.style.cssText = 'flex:1;background:#3a3a3a;border-radius:6px;padding:5px 12px;font-size:12px;color:#bbb;font-family:system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+  addrBar.textContent = 'https://TheAbsurdMachine.com/projects';
+
+  toolbar.appendChild(backBtn);
+  toolbar.appendChild(fwdBtn);
+  toolbar.appendChild(homeBtn);
+  toolbar.appendChild(addrBar);
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .proj-article h1{font-size:2em;font-weight:800;color:#fff;margin:0 0 .25em;line-height:1.15;}
+    .proj-article h2{font-size:1.3em;font-weight:700;color:#e0e0e0;margin:2em 0 .5em;padding-bottom:.3em;border-bottom:1px solid #222;}
+    .proj-article h3{font-size:1.05em;font-weight:700;color:#ccc;margin:1.5em 0 .4em;}
+    .proj-article p{margin:0 0 1.1em;line-height:1.8;color:#bbb;}
+    .proj-article ul,.proj-article ol{margin:0 0 1.1em;padding-left:1.5em;color:#bbb;}
+    .proj-article li{margin-bottom:.4em;line-height:1.7;}
+    .proj-article blockquote{border-left:3px solid #4ec9b0;margin:0 0 1.1em;padding:.5em 1em;color:#777;font-style:italic;}
+    .proj-article hr{border:none;border-top:1px solid #222;margin:2em 0;}
+    .proj-article code{background:#1a1a1a;color:#ce9178;padding:1px 5px;border-radius:3px;font-size:.88em;font-family:"JetBrains Mono",Consolas,monospace;}
+    .proj-article pre{background:#141414;border:1px solid #222;border-radius:6px;padding:16px;overflow-x:auto;margin:0 0 1.2em;}
+    .proj-article pre code{background:none;padding:0;font-size:13px;color:#9cdcfe;line-height:1.65;}
+    .proj-article a{color:#4ec9b0;text-decoration:none;}
+    .proj-article a:hover{text-decoration:underline;}
+    .proj-tag{color:#d7ba7d;}
+    .proj-post-meta{font-size:.85em;color:#555;margin:.25em 0 2em;}
+    .proj-index-item{border-top:1px solid #1a1a1a;padding:22px 0;cursor:pointer;}
+    .proj-index-title{font-size:25px;font-weight:700;color:#ddd;transition:color 0.15s;}
+    .proj-index-item:hover .proj-index-title{color:#fff;}`;
+
+  const content = document.createElement('div');
+  content.style.cssText = 'flex:1;overflow-y:auto;background:#0d0d0d;';
+
+  function setToolbar(isHome) {
+    backBtn.style.color = isHome ? '#444' : '#ccc';
+    backBtn.style.cursor = isHome ? 'default' : 'pointer';
+  }
+
+  function siteHeader() {
+    const d = document.createElement('div');
+    d.style.cssText = 'border-bottom:1px solid #181818;padding:18px 0;flex-shrink:0;';
+    const inner = document.createElement('div');
+    inner.style.cssText = 'max-width:700px;margin:0 auto;padding:0 28px;font-family:system-ui;display:flex;align-items:center;justify-content:space-between;';
+    const brand = document.createElement('span');
+    brand.textContent = 'The Absurd Machine';
+    brand.style.cssText = 'font-size:25px;font-weight:700;color:#fff;cursor:pointer;';
+    brand.addEventListener('click', showHome);
+    const aboutLink = document.createElement('span');
+    aboutLink.textContent = 'About';
+    aboutLink.style.cssText = 'font-size:13px;font-weight:700;color:#666;cursor:pointer;transition:color 0.15s;';
+    aboutLink.addEventListener('mouseover', () => aboutLink.style.color = '#ccc');
+    aboutLink.addEventListener('mouseout', () => aboutLink.style.color = '#666');
+    aboutLink.addEventListener('click', showAbout);
+    inner.appendChild(brand);
+    inner.appendChild(aboutLink);
+    d.appendChild(inner);
+    return d;
+  }
+
+  function projInline(text) {
+    let s = esc(text);
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    s = s.replace(/`(.+?)`/g, '<code>$1</code>');
+    s = s.replace(/→/g, '→');
+    s = s.replace(/\[(active|prototype|draft|unpublished|coming soon)\]/g, '<span class="proj-tag">[$1]</span>');
+    s = s.replace(/\[([^\]]+)\]/g, '<span style="color:#9cdcfe;">[$1]</span>');
+    return s;
+  }
+
+  function mdToHtml(md) {
+    const lines = md.split('\n');
+    let out = '', para = [], inUl = false, inOl = false, inPre = false;
+    const flushPara = () => { if (para.length) { const t = para.join(' ').trim(); if (t) out += `<p>${t}</p>`; para = []; } };
+    const closeLists = () => { if (inUl) { out += '</ul>'; inUl = false; } if (inOl) { out += '</ol>'; inOl = false; } };
+    for (const line of lines) {
+      if (/^ {4}/.test(line)) { flushPara(); closeLists(); if (!inPre) { out += '<pre><code>'; inPre = true; } out += esc(line.slice(4)) + '\n'; continue; }
+      if (inPre) { out += '</code></pre>'; inPre = false; }
+      if (/^- /.test(line)) { flushPara(); if (!inUl) { closeLists(); out += '<ul>'; inUl = true; } out += `<li>${projInline(line.slice(2))}</li>`; continue; }
+      if (/^\d+\. /.test(line)) { flushPara(); if (!inOl) { closeLists(); out += '<ol>'; inOl = true; } const m = line.match(/^\d+\. (.*)/); out += `<li>${projInline(m[1])}</li>`; continue; }
+      closeLists();
+      if (!line.trim()) { flushPara(); continue; }
+      if (/^# /.test(line))    { flushPara(); out += `<h1>${projInline(line.slice(2))}</h1>`; continue; }
+      if (/^## /.test(line))   { flushPara(); out += `<h2>${projInline(line.slice(3))}</h2>`; continue; }
+      if (/^### /.test(line))  { flushPara(); out += `<h3>${projInline(line.slice(4))}</h3>`; continue; }
+      if (/^> /.test(line))    { flushPara(); out += `<blockquote>${projInline(line.slice(2))}</blockquote>`; continue; }
+      if (/^---+$/.test(line)) { flushPara(); out += '<hr>'; continue; }
+      if (/^\*[^*]/.test(line)){ flushPara(); out += `<p class="proj-post-meta">${esc(line.replace(/^\*|\*$/g, ''))}</p>`; continue; }
+      para.push(projInline(line));
+    }
+    flushPara(); closeLists();
+    if (inPre) out += '</code></pre>';
+    return out;
+  }
+
+  function showHome() {
+    currentView = 'home';
+    setToolbar(true);
+    addrBar.textContent = 'https://TheAbsurdMachine.com/projects';
+    history.pushState({}, '', '/projects');
+    content.innerHTML = '';
+    content.appendChild(siteHeader());
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'max-width:700px;margin:24px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
+    wrap.innerHTML = `<h1 style="font-size:27px;font-weight:700;color:#fff;margin:0 0 20px;">Projects</h1>`;
+    projectEntries.forEach(entry => {
+      const item = document.createElement('div');
+      item.className = 'proj-index-item';
+      item.innerHTML = `
+        <span style="font-size:11px;color:#555;display:block;margin-bottom:5px;">${entry.date}</span>
+        <span class="proj-index-title">${entry.title}</span>`;
+      item.addEventListener('click', () => showProject(entry.id));
+      wrap.appendChild(item);
+    });
+    content.appendChild(wrap);
+    content.scrollTop = 0;
+  }
+
+  function showProject(id) {
+    const entry = projectEntries.find(e => e.id === id);
+    currentView = id;
+    setToolbar(false);
+    addrBar.textContent = `https://TheAbsurdMachine.com/projects/${entry.slug}`;
+    history.pushState({}, '', `/projects/${entry.slug}`);
+    content.innerHTML = '';
+    content.appendChild(siteHeader());
+    const article = document.createElement('article');
+    article.className = 'proj-article';
+    article.style.cssText = 'max-width:700px;margin:52px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
+    article.innerHTML = mdToHtml(files[id].content);
+    content.appendChild(article);
+    content.scrollTop = 0;
+  }
+
+  function showAbout() {
+    currentView = 'about';
+    setToolbar(false);
+    addrBar.textContent = 'https://TheAbsurdMachine.com/about';
+    history.pushState({}, '', '/about');
+    content.innerHTML = '';
+    content.appendChild(siteHeader());
+    const article = document.createElement('article');
+    article.className = 'proj-article';
+    article.style.cssText = 'max-width:700px;margin:52px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
+    article.innerHTML = mdToHtml(files['about'].content);
+    content.appendChild(article);
+    content.scrollTop = 0;
+  }
+
+  backBtn.addEventListener('click', () => { if (currentView !== 'home') showHome(); });
+  homeBtn.addEventListener('click', showHome);
+
+  el.appendChild(style);
+  el.appendChild(toolbar);
+  el.appendChild(content);
+  if (initialSlug) {
+    const entry = projectEntries.find(e => e.slug === initialSlug);
+    entry ? showProject(entry.id) : showHome();
+  } else {
+    showHome();
+  }
   return el;
 }
 
@@ -977,6 +1197,13 @@ function buildDesktopMenubar() {
     const ide = document.getElementById('ide-window');
     if (ide) { if (ide.style.display === 'none') revealWindow(ide); bringToFront(ide); }
   }));
+  left.appendChild(mbItem('Projects', () => {
+    const dot = document.getElementById('dock-dot-projects');
+    const pw = openAppWindow({ id: 'window-projects', title: 'Projects — The Absurd Machine', width: 1100, height: 800, buildContent: buildProjectsContent, dockDot: dot });
+    const w = parseInt(pw.style.width);
+    pw.style.left = `${window.innerWidth - w - 20}px`;
+    pw.style.top = '48px';
+  }));
   left.appendChild(mbItem('Blog', () => {
     const dot = document.getElementById('dock-dot-blog');
     const bw = openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 1100, height: 800, buildContent: buildBlogContent, dockDot: dot });
@@ -1060,8 +1287,7 @@ function buildDock(ideWin) {
     item.innerHTML = `
       <div class="dock-tooltip">${tooltip}</div>
       <div class="dock-icon">${iconHtml}</div>
-      <div class="dock-dot hidden" ${dotId ? `id="${dotId}"` : ''}></div>
-      <div class="dock-name">${tooltip}</div>`;
+      <div class="dock-dot hidden" ${dotId ? `id="${dotId}"` : ''}></div>`;
     item.addEventListener('click', onClick);
     dock.appendChild(item);
     return item.querySelector('.dock-dot');
@@ -1077,6 +1303,22 @@ function buildDock(ideWin) {
     () => { if (!state.windowOpen) revealWindow(ideWin); else bringToFront(ideWin); }
   );
   ideDot.classList.remove('hidden');
+
+  // Projects
+  dockItem(
+    'Projects',
+    `<div style="background:linear-gradient(145deg,#0d2e24,#051a0f);width:100%;height:100%;border-radius:13px;display:flex;align-items:center;justify-content:center;">
+       <svg width="24" height="24" viewBox="0 0 24 24" fill="#4ec9b0"><rect x="2" y="2" width="9" height="9" rx="2"/><rect x="13" y="2" width="9" height="9" rx="2"/><rect x="2" y="13" width="9" height="9" rx="2"/><rect x="13" y="13" width="9" height="9" rx="2"/></svg>
+     </div>`,
+    'dock-dot-projects',
+    () => {
+      const dot = document.getElementById('dock-dot-projects');
+      const pw = openAppWindow({ id: 'window-projects', title: 'Projects — The Absurd Machine', width: 1100, height: 800, buildContent: buildProjectsContent, dockDot: dot });
+      const w = parseInt(pw.style.width);
+      pw.style.left = `${window.innerWidth - w - 20}px`;
+      pw.style.top = '48px';
+    }
+  );
 
   // Blog
   dockItem(
@@ -1207,6 +1449,18 @@ function buildDesktopIcons(ideWin) {
       }
     },
     {
+      label: 'Projects',
+      iconHtml: `<div style="background:linear-gradient(145deg,#0d2e24,#051a0f);width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#4ec9b0"><rect x="2" y="2" width="9" height="9" rx="2"/><rect x="13" y="2" width="9" height="9" rx="2"/><rect x="2" y="13" width="9" height="9" rx="2"/><rect x="13" y="13" width="9" height="9" rx="2"/></svg></div>`,
+      onClick: () => {
+        const dot = document.getElementById('dock-dot-projects');
+        const pw = openAppWindow({ id: 'window-projects', title: 'Projects — The Absurd Machine', width: 1100, height: 800, buildContent: buildProjectsContent, dockDot: dot });
+        const w = parseInt(pw.style.width);
+        pw.style.left = `${window.innerWidth - w - 20}px`;
+        pw.style.top = '48px';
+      }
+    },
+    {
       label: 'YouTube',
       iconHtml: `<div style="background:#0f0f0f;width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid #272727;">
         <svg width="30" height="21" viewBox="0 0 32 22"><rect width="32" height="22" rx="5" fill="#FF0000"/><path d="M13 6.5l10 4.5-10 4.5V6.5z" fill="white"/></svg></div>`,
@@ -1226,7 +1480,7 @@ function buildDesktopIcons(ideWin) {
   icons.forEach(({ label, iconHtml, onClick }) => {
     const item = document.createElement('div');
     item.className = 'desktop-icon';
-    item.innerHTML = `<div style="width:48px;height:48px;">${iconHtml}</div><div class="desktop-icon-name">${label}</div>`;
+    item.innerHTML = `<div style="width:43px;height:43px;">${iconHtml}</div><div class="desktop-icon-name">${label}</div>`;
     item.addEventListener('click', onClick);
     container.appendChild(item);
   });
@@ -1237,6 +1491,11 @@ function buildDesktopIcons(ideWin) {
 // ===========================
 // DESKTOP INIT
 // ===========================
+
+function parseRoute() {
+  const parts = window.location.pathname.replace(/^\//, '').split('/').filter(Boolean);
+  return { section: parts[0] || '', slug: parts[1] || '' };
+}
 
 function initDesktop() {
   const app = document.getElementById('app');
@@ -1255,11 +1514,22 @@ function initDesktop() {
 
   app.appendChild(desktop);
   renderAll();
-  const blogDot = document.getElementById('dock-dot-blog');
-  const blogWin = openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 1100, height: 800, buildContent: buildBlogContent, dockDot: blogDot });
-  const bw = parseInt(blogWin.style.width);
-  blogWin.style.left = `${window.innerWidth - bw - 20}px`;
-  blogWin.style.top = '48px';
+
+  const route = parseRoute();
+
+  function openTopRight(id, title, buildFn) {
+    const dot = document.getElementById(`dock-dot-${id}`);
+    const w = openAppWindow({ id: `window-${id}`, title, width: 1100, height: 800, buildContent: buildFn, dockDot: dot });
+    const pw = parseInt(w.style.width);
+    w.style.left = `${window.innerWidth - pw - 20}px`;
+    w.style.top = '48px';
+  }
+
+  if (route.section === 'projects') {
+    openTopRight('projects', 'Projects — The Absurd Machine', () => buildProjectsContent(route.slug || null));
+  } else {
+    openTopRight('blog', 'Blog — The Absurd Machine', () => buildBlogContent(route.slug || null));
+  }
 }
 
 // ===========================
