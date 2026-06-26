@@ -1517,18 +1517,22 @@ function initDesktop() {
 
   const route = parseRoute();
 
-  function openTopRight(id, title, buildFn) {
+  function openTopRight(id, title, buildFn, maximize = false) {
     const dot = document.getElementById(`dock-dot-${id}`);
     const w = openAppWindow({ id: `window-${id}`, title, width: 1100, height: 800, buildContent: buildFn, dockDot: dot });
-    const pw = parseInt(w.style.width);
-    w.style.left = `${window.innerWidth - pw - 20}px`;
-    w.style.top = '48px';
+    if (maximize) {
+      winToggleMax(w);
+    } else {
+      const pw = parseInt(w.style.width);
+      w.style.left = `${window.innerWidth - pw - 20}px`;
+      w.style.top = '48px';
+    }
   }
 
   if (route.section === 'projects') {
-    openTopRight('projects', 'Projects — The Absurd Machine', () => buildProjectsContent(route.slug || null));
+    openTopRight('projects', 'Projects — The Absurd Machine', () => buildProjectsContent(route.slug || null), !!route.slug);
   } else {
-    openTopRight('blog', 'Blog — The Absurd Machine', () => buildBlogContent(route.slug || null));
+    openTopRight('blog', 'Blog — The Absurd Machine', () => buildBlogContent(route.slug || null), !!route.slug);
   }
 }
 
