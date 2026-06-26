@@ -871,6 +871,7 @@ function buildBlogContent(initialSlug = null) {
   homeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>`;
 
   const addrBar = document.createElement('div');
+  addrBar.className = 'app-addr-bar';
   addrBar.style.cssText = 'flex:1;background:#3a3a3a;border-radius:6px;padding:5px 12px;font-size:12px;color:#bbb;font-family:system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
   addrBar.textContent = 'https://TheAbsurdMachine.com/blog';
 
@@ -1091,6 +1092,7 @@ function buildProjectsContent(initialSlug = null) {
   homeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>`;
 
   const addrBar = document.createElement('div');
+  addrBar.className = 'app-addr-bar';
   addrBar.style.cssText = 'flex:1;background:#3a3a3a;border-radius:6px;padding:5px 12px;font-size:12px;color:#bbb;font-family:system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
   addrBar.textContent = 'https://TheAbsurdMachine.com/projects';
 
@@ -1551,49 +1553,243 @@ function makeDraggable(win, handle) {
 // MOBILE INIT
 // ===========================
 
-function initMobile() {
-  const app = document.getElementById('app');
+// ===========================
+// MOBILE HELPERS
+// ===========================
 
-  const titlebar = document.createElement('div');
-  titlebar.className = 'titlebar';
-  titlebar.innerHTML = `
-    <div class="traffic-lights">
-      <span class="light light-red"></span>
-      <span class="light light-yellow"></span>
-      <span class="light light-green"></span>
-    </div>
-    <span class="titlebar-title">The Absurd Machine</span>
-    <div class="hamburger" id="hamburger">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-        <rect x="1" y="3" width="16" height="2" rx="1"/>
-        <rect x="1" y="8" width="16" height="2" rx="1"/>
-        <rect x="1" y="13" width="16" height="2" rx="1"/>
-      </svg>
-    </div>`;
+function buildMobileStatusBar() {
+  const bar = document.createElement('div');
+  bar.className = 'mobile-status-bar';
 
-  const overlay = document.createElement('div');
-  overlay.className = 'sidebar-overlay';
-  overlay.id = 'sidebar-overlay';
-  overlay.addEventListener('click', closeMobileSidebar);
+  const timeEl = document.createElement('span');
+  timeEl.className = 'mobile-time';
+  function tick() {
+    const now = new Date();
+    timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 15000);
 
-  const workbench = document.createElement('div');
-  workbench.className = 'workbench';
-  workbench.appendChild(buildActivityBar());
-  workbench.appendChild(buildSidebar());
-  workbench.appendChild(buildEditorArea());
+  const right = document.createElement('div');
+  right.className = 'mobile-status-right';
+  right.innerHTML = `
+    <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" style="opacity:.85">
+      <rect x="0" y="8" width="3" height="4" rx=".5"/>
+      <rect x="4.5" y="5.5" width="3" height="6.5" rx=".5"/>
+      <rect x="9" y="3" width="3" height="9" rx=".5"/>
+      <rect x="13.5" y="0" width="3" height="12" rx=".5"/>
+    </svg>
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="none" style="opacity:.85">
+      <rect x=".5" y=".5" width="21" height="11" rx="2.5" stroke="currentColor" stroke-opacity=".4"/>
+      <rect x="1.5" y="1.5" width="16" height="9" rx="1.5" fill="currentColor"/>
+      <path d="M23 4v4a2 2 0 000-4z" fill="currentColor" fill-opacity=".4"/>
+    </svg>`;
 
-  app.appendChild(titlebar);
-  app.appendChild(overlay);
-  app.appendChild(workbench);
-  app.appendChild(buildStatusBar());
+  bar.appendChild(timeEl);
+  bar.appendChild(right);
+  return bar;
+}
 
-  document.getElementById('hamburger')?.addEventListener('click', () => {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    sidebar?.classList.contains('mobile-open') ? closeMobileSidebar() : (sidebar?.classList.add('mobile-open'), sidebarOverlay?.classList.add('open'));
+const MOBILE_ICON_HTML = {
+  blog: `<div style="background:linear-gradient(145deg,#2d1b4e,#1a0d2e);width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><svg width="28" height="30" viewBox="0 0 26 28" fill="none"><rect x="2" y="2" width="22" height="24" rx="3" stroke="#c678dd" stroke-width="2"/><line x1="7" y1="9" x2="19" y2="9" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="14" x2="19" y2="14" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="19" x2="14" y2="19" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/></svg></div>`,
+  projects: `<div style="background:linear-gradient(145deg,#0d2e24,#051a0f);width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#4ec9b0"><rect x="2" y="2" width="9" height="9" rx="2"/><rect x="13" y="2" width="9" height="9" rx="2"/><rect x="2" y="13" width="9" height="9" rx="2"/><rect x="13" y="13" width="9" height="9" rx="2"/></svg></div>`,
+  portfolio: `<div style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><span style="font-family:'JetBrains Mono',monospace;font-size:21px;color:#007acc;font-weight:700">&lt;/&gt;</span></div>`,
+  youtube: `<div style="background:#0f0f0f;width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;"><svg width="34" height="24" viewBox="0 0 32 22"><rect width="32" height="22" rx="5" fill="#FF0000"/><path d="M13 6.5l10 4.5-10 4.5V6.5z" fill="white"/></svg></div>`,
+  github: `<div style="background:#161b22;width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="#e6edf3"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>`,
+};
+
+function buildMobileGridIcon(label, key, onClick) {
+  const item = document.createElement('div');
+  item.className = 'mobile-grid-icon';
+  const img = document.createElement('div');
+  img.className = 'mobile-icon-img';
+  img.innerHTML = MOBILE_ICON_HTML[key];
+  const lbl = document.createElement('div');
+  lbl.className = 'mobile-icon-label';
+  lbl.textContent = label;
+  item.appendChild(img);
+  item.appendChild(lbl);
+  item.addEventListener('click', onClick);
+  // touch bounce
+  item.addEventListener('touchstart', () => img.style.transform = 'scale(0.88)', { passive: true });
+  item.addEventListener('touchend', () => img.style.transform = '', { passive: true });
+  item.addEventListener('touchcancel', () => img.style.transform = '', { passive: true });
+  return item;
+}
+
+function buildMobileDockIcon(label, key, onClick) {
+  const item = document.createElement('div');
+  item.className = 'mobile-dock-icon';
+  const img = document.createElement('div');
+  img.className = 'mobile-dock-icon-img';
+  img.innerHTML = MOBILE_ICON_HTML[key];
+  const lbl = document.createElement('div');
+  lbl.className = 'mobile-dock-icon-label';
+  lbl.textContent = label;
+  item.appendChild(img);
+  item.appendChild(lbl);
+  item.addEventListener('click', onClick);
+  item.addEventListener('touchstart', () => img.style.transform = 'scale(0.88)', { passive: true });
+  item.addEventListener('touchend', () => img.style.transform = '', { passive: true });
+  item.addEventListener('touchcancel', () => img.style.transform = '', { passive: true });
+  return item;
+}
+
+function buildMobilePortfolio() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:relative;height:100%;overflow:hidden;background:#0d0d0d;';
+
+  const list = document.createElement('div');
+  list.style.cssText = 'position:absolute;inset:0;overflow-y:auto;background:#0d0d0d;transition:transform 0.25s ease;';
+
+  const viewer = document.createElement('div');
+  viewer.style.cssText = 'position:absolute;inset:0;background:#0d0d0d;transform:translateX(100%);transition:transform 0.25s ease;display:flex;flex-direction:column;';
+
+  const viewerNav = document.createElement('div');
+  viewerNav.style.cssText = 'height:44px;background:#1e1e1e;border-bottom:1px solid #111;display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;';
+  const viewerBack = document.createElement('button');
+  viewerBack.style.cssText = 'background:none;border:none;color:#007acc;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:-apple-system,sans-serif;';
+  viewerBack.innerHTML = `<svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Files`;
+  viewerBack.addEventListener('click', () => {
+    viewer.style.transform = 'translateX(100%)';
+    list.style.transform = 'translateX(0)';
+  });
+  const viewerTitle = document.createElement('span');
+  viewerTitle.style.cssText = 'font-size:12px;color:#888;font-family:"JetBrains Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+  viewerNav.appendChild(viewerBack);
+  viewerNav.appendChild(viewerTitle);
+
+  const viewerBody = document.createElement('div');
+  viewerBody.style.cssText = 'flex:1;overflow-y:auto;padding:12px 0;';
+
+  viewer.appendChild(viewerNav);
+  viewer.appendChild(viewerBody);
+
+  function openFile(id, name) {
+    viewerTitle.textContent = name;
+    const lines = files[id].content.split('\n');
+    viewerBody.innerHTML = lines.map((l, i) =>
+      `<div style="display:flex;min-height:20px;"><span style="color:#2c2c2c;min-width:40px;text-align:right;padding:0 10px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;user-select:none;flex-shrink:0;">${i + 1}</span><span style="flex:1;font-size:13px;line-height:1.7;font-family:'JetBrains Mono',monospace;padding-right:12px;word-break:break-word;">${renderLine(l)}</span></div>`
+    ).join('');
+    viewer.style.transform = 'translateX(0)';
+    list.style.transform = 'translateX(-25%)';
+    viewerBody.scrollTop = 0;
+  }
+
+  const sections = [
+    { label: 'ROOT', files: [{ id: 'readme', name: 'README.md' }] },
+    { label: 'PROJECTS', files: [
+      { id: 'neon-void',  name: 'neon-void.md' },
+      { id: 'byte-brawn', name: 'byte-brawn.md' },
+      { id: 'mayphex',   name: 'mayphex.md' },
+    ]},
+    { label: 'BLOG', files: [{ id: 'post-1', name: 'on-building-absurd-things.md' }] },
+    { label: 'ABOUT', files: [{ id: 'about', name: 'who.md' }] },
+  ];
+
+  sections.forEach(({ label, files: sectionFiles }) => {
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:18px 16px 6px;font-size:10px;font-weight:700;color:#3a3a3a;letter-spacing:.12em;font-family:"JetBrains Mono",monospace;';
+    hdr.textContent = label;
+    list.appendChild(hdr);
+    sectionFiles.forEach(({ id, name }) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid #111;cursor:pointer;transition:background .15s;';
+      row.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#007acc;flex-shrink:0;"></span><span style="flex:1;font-size:13px;color:#ccc;font-family:'JetBrains Mono',monospace;">${name}</span><span style="color:#2a2a2a;font-size:20px;line-height:1;">›</span>`;
+      row.addEventListener('click', () => openFile(id, name));
+      row.addEventListener('touchstart', () => row.style.background = '#1a1a1a', { passive: true });
+      row.addEventListener('touchend', () => row.style.background = '', { passive: true });
+      list.appendChild(row);
+    });
   });
 
-  renderAll();
+  el.appendChild(list);
+  el.appendChild(viewer);
+  setTimeout(() => openFile('readme', 'README.md'), 30);
+  return el;
+}
+
+function openMobileApp(type, slug = null) {
+  if (document.getElementById(`mobile-panel-${type}`)) return;
+
+  const panel = document.createElement('div');
+  panel.className = 'mobile-panel';
+  panel.id = `mobile-panel-${type}`;
+
+  const nav = document.createElement('div');
+  nav.className = 'mobile-panel-nav';
+
+  const backBtn = document.createElement('button');
+  backBtn.className = 'mobile-panel-back';
+  backBtn.innerHTML = `<svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Home`;
+  backBtn.addEventListener('click', () => closeMobileApp(type));
+
+  const titles = { blog: 'Blog', projects: 'Projects', portfolio: 'Portfolio' };
+  const titleEl = document.createElement('span');
+  titleEl.className = 'mobile-panel-title';
+  titleEl.textContent = titles[type] || '';
+
+  nav.appendChild(backBtn);
+  nav.appendChild(titleEl);
+  panel.appendChild(nav);
+
+  const content = document.createElement('div');
+  content.className = 'mobile-panel-content';
+
+  if (type === 'blog') content.appendChild(buildBlogContent(slug));
+  else if (type === 'projects') content.appendChild(buildProjectsContent(slug));
+  else if (type === 'portfolio') content.appendChild(buildMobilePortfolio());
+
+  panel.appendChild(content);
+  document.getElementById('app').appendChild(panel);
+  requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('active')));
+}
+
+function closeMobileApp(type) {
+  const panel = document.getElementById(`mobile-panel-${type}`);
+  if (!panel) return;
+  panel.classList.remove('active');
+  setTimeout(() => panel.remove(), 320);
+  history.pushState({}, '', '/');
+}
+
+function initMobile() {
+  const app = document.getElementById('app');
+  app.style.cssText = 'position:fixed;inset:0;overflow:hidden;background:#080810;';
+
+  const home = document.createElement('div');
+  home.className = 'mobile-home';
+
+  home.appendChild(buildMobileStatusBar());
+
+  const grid = document.createElement('div');
+  grid.className = 'mobile-grid';
+  [
+    { label: 'Blog',      key: 'blog',      onClick: () => openMobileApp('blog') },
+    { label: 'Projects',  key: 'projects',  onClick: () => openMobileApp('projects') },
+    { label: 'Portfolio', key: 'portfolio', onClick: () => openMobileApp('portfolio') },
+    { label: 'YouTube',   key: 'youtube',   onClick: () => window.open('https://youtube.com/@theabsurdmachine', '_blank') },
+    { label: 'GitHub',    key: 'github',    onClick: () => window.open('https://github.com/TheAbsurdMachine', '_blank') },
+  ].forEach(({ label, key, onClick }) => grid.appendChild(buildMobileGridIcon(label, key, onClick)));
+  home.appendChild(grid);
+
+  const dockWrap = document.createElement('div');
+  dockWrap.className = 'mobile-dock';
+  const dockInner = document.createElement('div');
+  dockInner.className = 'mobile-dock-inner';
+  [
+    { label: 'Blog',      key: 'blog',      onClick: () => openMobileApp('blog') },
+    { label: 'Projects',  key: 'projects',  onClick: () => openMobileApp('projects') },
+    { label: 'Portfolio', key: 'portfolio', onClick: () => openMobileApp('portfolio') },
+  ].forEach(({ label, key, onClick }) => dockInner.appendChild(buildMobileDockIcon(label, key, onClick)));
+  dockWrap.appendChild(dockInner);
+  home.appendChild(dockWrap);
+
+  app.appendChild(home);
+
+  const route = parseRoute();
+  if (route.section === 'blog') openMobileApp('blog', route.slug || null);
+  else if (route.section === 'projects') openMobileApp('projects', route.slug || null);
 }
 
 function buildDesktopIcons(ideWin) {
