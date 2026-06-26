@@ -945,7 +945,10 @@ function buildDesktopMenubar() {
   }));
   left.appendChild(mbItem('Blog', () => {
     const dot = document.getElementById('dock-dot-blog');
-    openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 900, height: 620, buildContent: buildBlogContent, dockDot: dot, offset: { x: 0, y: -10 } });
+    const bw = openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 1100, height: 800, buildContent: buildBlogContent, dockDot: dot });
+    const w = parseInt(bw.style.width);
+    bw.style.left = `${window.innerWidth - w - 20}px`;
+    bw.style.top = '48px';
   }));
   left.appendChild(mbItem('YouTube', () => window.open('https://youtube.com/@theabsurdmachine', '_blank')));
   left.appendChild(mbItem('GitHub', () => window.open('https://github.com/TheAbsurdMachine', '_blank')));
@@ -970,10 +973,10 @@ function buildIdeWindow() {
   win.className = 'ide-window';
   win.id = 'ide-window';
 
-  const winW = Math.min(window.innerWidth * 0.82, 1100);
-  const winH = window.innerHeight * 0.80;
-  const left = (window.innerWidth - winW) / 2;
-  const top = 28 + (window.innerHeight - 28 - winH) / 2;
+  const winW = Math.min(900, window.innerWidth * 0.88);
+  const winH = Math.min(620, window.innerHeight * 0.84);
+  const left = Math.max(30, Math.round(window.innerWidth * 0.075));
+  const top = window.innerHeight - winH - 80;
 
   win.style.cssText = `width:${winW}px;height:${winH}px;left:${left}px;top:${top}px;`;
 
@@ -1023,7 +1026,8 @@ function buildDock(ideWin) {
     item.innerHTML = `
       <div class="dock-tooltip">${tooltip}</div>
       <div class="dock-icon">${iconHtml}</div>
-      <div class="dock-dot hidden" ${dotId ? `id="${dotId}"` : ''}></div>`;
+      <div class="dock-dot hidden" ${dotId ? `id="${dotId}"` : ''}></div>
+      <div class="dock-name">${tooltip}</div>`;
     item.addEventListener('click', onClick);
     dock.appendChild(item);
     return item.querySelector('.dock-dot');
@@ -1049,7 +1053,10 @@ function buildDock(ideWin) {
     'dock-dot-blog',
     () => {
       const dot = document.getElementById('dock-dot-blog');
-      openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 900, height: 620, buildContent: buildBlogContent, dockDot: dot, offset: { x: 0, y: -10 } });
+      const bw = openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 1100, height: 800, buildContent: buildBlogContent, dockDot: dot });
+      const w = parseInt(bw.style.width);
+      bw.style.left = `${window.innerWidth - w - 20}px`;
+      bw.style.top = '48px';
     }
   );
 
@@ -1145,6 +1152,54 @@ function initMobile() {
   renderAll();
 }
 
+function buildDesktopIcons(ideWin) {
+  const icons = [
+    {
+      label: 'Portfolio',
+      iconHtml: `<div style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:18px;color:#007acc;font-weight:700">&lt;/&gt;</span></div>`,
+      onClick: () => { if (!state.windowOpen) revealWindow(ideWin); else bringToFront(ideWin); }
+    },
+    {
+      label: 'Blog',
+      iconHtml: `<div style="background:linear-gradient(145deg,#2d1b4e,#1a0d2e);width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+        <svg width="26" height="27" viewBox="0 0 26 28" fill="none"><rect x="2" y="2" width="22" height="24" rx="3" stroke="#c678dd" stroke-width="2"/><line x1="7" y1="9" x2="19" y2="9" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="14" x2="19" y2="14" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="19" x2="14" y2="19" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/></svg></div>`,
+      onClick: () => {
+        const dot = document.getElementById('dock-dot-blog');
+        const bw = openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 1100, height: 800, buildContent: buildBlogContent, dockDot: dot });
+        const w = parseInt(bw.style.width);
+        bw.style.left = `${window.innerWidth - w - 20}px`;
+        bw.style.top = '48px';
+      }
+    },
+    {
+      label: 'YouTube',
+      iconHtml: `<div style="background:#0f0f0f;width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid #272727;">
+        <svg width="30" height="21" viewBox="0 0 32 22"><rect width="32" height="22" rx="5" fill="#FF0000"/><path d="M13 6.5l10 4.5-10 4.5V6.5z" fill="white"/></svg></div>`,
+      onClick: () => window.open('https://youtube.com/@theabsurdmachine', '_blank')
+    },
+    {
+      label: 'GitHub',
+      iconHtml: `<div style="background:#161b22;width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="#e6edf3"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>`,
+      onClick: () => window.open('https://github.com/TheAbsurdMachine', '_blank')
+    },
+  ];
+
+  const container = document.createElement('div');
+  container.style.cssText = 'position:absolute;top:48px;left:16px;display:flex;flex-direction:column;gap:4px;z-index:10;';
+
+  icons.forEach(({ label, iconHtml, onClick }) => {
+    const item = document.createElement('div');
+    item.className = 'desktop-icon';
+    item.innerHTML = `<div style="width:48px;height:48px;">${iconHtml}</div><div class="desktop-icon-name">${label}</div>`;
+    item.addEventListener('click', onClick);
+    container.appendChild(item);
+  });
+
+  return container;
+}
+
 // ===========================
 // DESKTOP INIT
 // ===========================
@@ -1161,10 +1216,16 @@ function initDesktop() {
 
   const win = buildIdeWindow();
   desktop.appendChild(win);
+  desktop.appendChild(buildDesktopIcons(win));
   desktop.appendChild(buildDock(win));
 
   app.appendChild(desktop);
   renderAll();
+  const blogDot = document.getElementById('dock-dot-blog');
+  const blogWin = openAppWindow({ id: 'window-blog', title: 'Blog — The Absurd Machine', width: 1100, height: 800, buildContent: buildBlogContent, dockDot: blogDot });
+  const bw = parseInt(blogWin.style.width);
+  blogWin.style.left = `${window.innerWidth - bw - 20}px`;
+  blogWin.style.top = '48px';
 }
 
 // ===========================
