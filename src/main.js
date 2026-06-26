@@ -22,7 +22,7 @@ Most answers are wrong. That's the point.
 
 ## Active Projects
 
-- **Neon-Void**    [prototype]   visual noise meets ambient music
+- **Neon Void**    [active]      arcade space shooter · live at mayphex.com
 - **ByteBrawn**    [active]      fitness tracking with no excuses
 - **Mayphex**      [prototype]   scheduling, probably
 
@@ -30,7 +30,7 @@ Most answers are wrong. That's the point.
 
 ## Recent Posts
 
-- On Building Things That Shouldn't Exist   [draft]
+- On Building Things That Shouldn't Exist
 
 ---
 
@@ -46,36 +46,72 @@ Most answers are wrong. That's the point.
 
   'neon-void': {
     name: 'neon-void.md',
-    content: `# Neon-Void
+    content: `# Neon Void
 
-**Status:** [prototype]
+**Status:** [active]
+**Live:** mayphex.com
 **Repo:** github.com/TheAbsurdMachine/Neon-Void
+**Stack:** TypeScript · React 18 · Canvas 2D · Vite 7
 
 ---
 
 ## What Is It?
 
-An experiment at the intersection of visual noise and ambient audio.
-Procedurally generated visuals that respond to frequency data in real time.
+A neon arcade space shooter. You're alone in the void — one ship
+against escalating enemy waves. Drift, shoot, chain combos,
+spend credits in the Void Shop between rounds.
 
-## Why?
+That's the loop. It's meant to be fun first.
 
-The indie dev space is missing a middle ground between
-full DAWs with visual plugins and basic Winamp visualizers.
-This lives in that gap.
+---
 
-## Current State
+## The Loop
 
-- Three.js canvas running
-- Audio FFT pipeline hooked up
-- Visuals respond to frequency bands
-- Needs: better shaders, UI, export flow
+    LAUNCH → FIGHT THE WAVE → EARN CREDITS → VOID SHOP → NEXT WAVE
+                 ↑                                              |
+                 └──────────── boss waves · bigger stakes ──────┘
 
-## Next Steps
+Waves escalate from Drifters to Hunters, Orbiters, Splitters, and Bosses.
+Movement is momentum-based: you drift, you don't stop on a dime.
 
-1. Write the post
-2. Record the walkthrough
-3. Ship`
+Between waves the **Void Shop** opens — spend CR on blasters (Pulse Bolt
+→ Needle Stream → Shard Burst → Pierce Lance → Twin Stream → Nova Cannon),
+hull repair, and ship skins. Loadout persists across runs.
+
+---
+
+## Why Build a Game?
+
+Three goals, in order:
+
+1. Make something fun enough that people actually play it
+2. Use the sim as an ML training environment
+3. Port it into Palantir Foundry as a side experiment
+
+The game is the product. Everything else is a side effect.
+
+---
+
+## ML Training Environment
+
+The sim runs headless. \`GameSim({ headless: true })\` gives fast rollouts
+without rendering. \`observe(sim)\` returns a normalized Float32Array.
+18 discrete actions map to inputs via \`agentActionToInput()\`.
+
+A rule-based bot (RuleBot) is live in AI Mode today.
+Trained models are next.
+
+---
+
+## Stack
+
+- TypeScript + React 18 for the UI shell
+- Canvas 2D for the engine — no Unity, no Phaser
+- Vite 7
+- localStorage, local-first
+- Capacitor for iOS (same codebase, no Swift)
+
+Clean boundary between play and train.`
   },
 
   'byte-brawn': {
@@ -84,6 +120,7 @@ This lives in that gap.
 
 **Status:** [active]
 **Repo:** github.com/TheAbsurdMachine/ByteBrawn
+**Stack:** Vanilla JS · No backend · PWA
 
 ---
 
@@ -91,25 +128,48 @@ This lives in that gap.
 
 Fitness tracking with no excuses.
 No subscriptions. No social features. No gamification.
+
 Just: did you lift today, or not?
+
+---
 
 ## Why?
 
-Every fitness app is trying to be your coach, your community,
-your therapist. Most people just need a log.
+Every fitness app wants to be your coach, your community, your therapist.
+
+Most people just need a log. One that doesn't require an account to
+remember that you did 3×10 squats on Tuesday.
+
+ByteBrawn is that log.
+
+---
+
+## Principles
+
+- Local-first. Your data stays on your device.
+- No account required. No server. No cloud sync.
+- Fast. Loads instantly. Works offline.
+- Honest. Tracks what you did, not what the app wants you to do.
+
+---
 
 ## Current State
 
 - Core tracking works
-- Local storage persistence
-- Basic history view
-- Needs: data export, PR tracking, graph view
+- localStorage persistence
+- Basic session history
+
+Coming next: data export, PR (personal record) tracking, graph view.
+
+---
 
 ## Stack
 
-- Vanilla JS
-- No backend (local-first)
-- PWA for mobile`
+- Vanilla JS — no framework
+- localStorage for persistence
+- PWA manifest for mobile install
+
+The point is it could be a single HTML file and work fine.`
   },
 
   mayphex: {
@@ -125,11 +185,24 @@ your therapist. Most people just need a log.
 
 Still figuring it out.
 
-Working idea: a scheduling tool for people who
-hate scheduling tools.
+Working idea: a scheduling tool for people who already know
+what they need to do — but keep not doing it because the
+tooling gets in the way.
 
-Inspired by the fact that every calendar app
-is designed for people who already have their life together.
+Every calendar app is designed for someone who already has
+their life together. Mayphex is for the other kind of person.
+
+---
+
+## The Problem
+
+Scheduling tools assume you want to schedule. They front-load
+configuration: recurring events, color codes, shared calendars,
+integrations with seven other apps.
+
+Most people just need to know: what am I doing today, and when?
+
+---
 
 ## Current State
 
@@ -137,21 +210,28 @@ is designed for people who already have their life together.
 - Some sketches
 - No code yet
 
+The questions still outnumber the answers.
+That's the right stage to be in.
+
+---
+
 ## Questions To Answer
 
-- What problem does this actually solve?
-- Who is it for?
-- Why would anyone use this over Google Calendar?
+- What is the actual atomic unit of a schedule?
+  (A task? A block? An intention?)
+- What happens when someone misses a block?
+  (Reschedule, or just move on?)
+- Why would anyone use this over a notes app and a phone alarm?
 
-The answer to all three might be "nobody" and "they wouldn't."
-That's fine. Build it anyway.`
+The answer to the last one might be "they wouldn't."
+Build it anyway.`
   },
 
   'post-1': {
     name: 'on-building-absurd-things.md',
     content: `# On Building Things That Shouldn't Exist
 
-*Draft — unpublished*
+*Jun 2025*
 
 ---
 
@@ -164,21 +244,30 @@ These are the only projects worth building.
 
 ---
 
-## The Pipeline
+## The Problem With Side Projects
 
-Side projects die in one of two places:
+Most side projects die in one of two places:
 
 1. The prototype works but never gets written about
-2. The post gets written but never turns into anything
+2. The post gets written but never turns into anything real
 
-The fix is a forcing function. A pipeline where each stage
-forces the next one.
+I've done both. Built a prototype, felt good about it, moved on.
+Wrote a post, published it, forgot about the underlying project.
+
+Neither one counts as shipping.
+
+---
+
+## A Forcing Function
+
+The fix is structure. A pipeline where each stage makes the next
+stage unavoidable.
 
     idea
       ↓
-    repo       // commitment. you named it. it exists.
+    repo       // commitment. you named it. it exists now.
       ↓
-    prototype  // does it work? close enough.
+    prototype  // does it work? close enough counts.
       ↓
     post       // explain it. you'll find the holes.
       ↓
@@ -186,8 +275,35 @@ forces the next one.
       ↓
     ship
 
-The post forces clarity. The video forces depth.
-By the time you ship, you actually understand it.
+The post forces clarity. You can't write about something you
+don't understand, and the act of writing surfaces every assumption
+you made during the prototype.
+
+The video forces depth. You can't teach something you can't explain
+out loud, and the act of recording finds every gap the writing missed.
+
+By the time you ship, you've interrogated the thing from three angles.
+You know why it works. You know where it doesn't. That's the point.
+
+---
+
+## What This Looks Like In Practice
+
+**Neon Void** started as "what if I built a game." No more specific
+than that. The prototype was a ship that could move and shoot.
+Then enemies. Then a shop. Then it was a real game.
+
+The post forced me to articulate why the ML training environment
+mattered — which forced me to actually build the observation/action
+API properly, not just gesture at it.
+
+**ByteBrawn** started as frustration. Every fitness app wants to
+coach you. Sometimes you just want a log. The prototype was a
+single text input and a submit button. The constraints came later,
+from writing about why each decision was made.
+
+The pattern holds: the project gets better in the writing,
+not just in the building.
 
 ---
 
@@ -195,10 +311,13 @@ By the time you ship, you actually understand it.
 
 A machine that runs on absurd inputs.
 
-An idea that makes no sense
-→ becomes a thing that does.
+An idea that makes no business sense
+→ becomes a thing that exists and works.
 
-That's the whole thing.`
+The inputs are absurd. The output is real. That gap — between
+"this makes no sense" and "this is a thing now" — is the point.
+
+That's the whole machine.`
   },
 
   about: {
@@ -275,7 +394,7 @@ const fileTree = [
 const state = {
   openTabs: ['readme'],
   activeTab: 'readme',
-  openFolders: new Set(['projects']),
+  openFolders: new Set(['projects', 'blog']),
   cursorLine: 1,
   windowOpen: true,
   windowMaximized: false,
@@ -760,6 +879,28 @@ function buildBlogContent(initialSlug = null) {
   toolbar.appendChild(homeBtn);
   toolbar.appendChild(addrBar);
 
+  const navHistory = [];
+  let navIdx = -1;
+  function pushNav(view) {
+    navHistory.splice(navIdx + 1);
+    navHistory.push(view);
+    navIdx = navHistory.length - 1;
+    updateNavBtns();
+  }
+  function updateNavBtns() {
+    const canBack = navIdx > 0;
+    const canFwd = navIdx < navHistory.length - 1;
+    backBtn.style.color = canBack ? '#ccc' : '#444';
+    backBtn.style.cursor = canBack ? 'pointer' : 'default';
+    fwdBtn.style.color = canFwd ? '#ccc' : '#444';
+    fwdBtn.style.cursor = canFwd ? 'pointer' : 'default';
+  }
+  function goToView(view) {
+    if (view === 'home') showHome(false);
+    else if (view === 'about') showAbout(false);
+    else showPost(view, false);
+  }
+
   // ── Inline styles ──
   const style = document.createElement('style');
   style.textContent = `
@@ -786,11 +927,6 @@ function buildBlogContent(initialSlug = null) {
   const content = document.createElement('div');
   content.style.cssText = 'flex:1;overflow-y:auto;background:#0d0d0d;';
 
-  function setToolbar(isHome) {
-    backBtn.style.color = isHome ? '#444' : '#ccc';
-    backBtn.style.cursor = isHome ? 'default' : 'pointer';
-  }
-
   function siteHeader() {
     const d = document.createElement('div');
     d.style.cssText = 'border-bottom:1px solid #181818;padding:18px 0;flex-shrink:0;';
@@ -812,9 +948,9 @@ function buildBlogContent(initialSlug = null) {
     return d;
   }
 
-  function showHome() {
+  function showHome(push = true) {
     currentView = 'home';
-    setToolbar(true);
+    if (push) pushNav('home');
     addrBar.textContent = 'https://TheAbsurdMachine.com/blog';
     history.pushState({}, '', '/blog');
     content.innerHTML = '';
@@ -875,10 +1011,10 @@ function buildBlogContent(initialSlug = null) {
     return out;
   }
 
-  function showPost(id) {
+  function showPost(id, push = true) {
     const entry = blogEntries.find(e => e.id === id);
     currentView = id;
-    setToolbar(false);
+    if (push) pushNav(id);
     addrBar.textContent = `https://TheAbsurdMachine.com/blog/${entry.slug}`;
     history.pushState({}, '', `/blog/${entry.slug}`);
     content.innerHTML = '';
@@ -891,9 +1027,9 @@ function buildBlogContent(initialSlug = null) {
     content.scrollTop = 0;
   }
 
-  function showAbout() {
+  function showAbout(push = true) {
     currentView = 'about';
-    setToolbar(false);
+    if (push) pushNav('about');
     addrBar.textContent = 'https://TheAbsurdMachine.com/about';
     history.pushState({}, '', '/about');
     content.innerHTML = '';
@@ -906,7 +1042,12 @@ function buildBlogContent(initialSlug = null) {
     content.scrollTop = 0;
   }
 
-  backBtn.addEventListener('click', () => { if (currentView !== 'home') showHome(); });
+  backBtn.addEventListener('click', () => {
+    if (navIdx > 0) { navIdx--; goToView(navHistory[navIdx]); updateNavBtns(); }
+  });
+  fwdBtn.addEventListener('click', () => {
+    if (navIdx < navHistory.length - 1) { navIdx++; goToView(navHistory[navIdx]); updateNavBtns(); }
+  });
   homeBtn.addEventListener('click', showHome);
 
   el.appendChild(style);
@@ -958,6 +1099,28 @@ function buildProjectsContent(initialSlug = null) {
   toolbar.appendChild(homeBtn);
   toolbar.appendChild(addrBar);
 
+  const navHistory = [];
+  let navIdx = -1;
+  function pushNav(view) {
+    navHistory.splice(navIdx + 1);
+    navHistory.push(view);
+    navIdx = navHistory.length - 1;
+    updateNavBtns();
+  }
+  function updateNavBtns() {
+    const canBack = navIdx > 0;
+    const canFwd = navIdx < navHistory.length - 1;
+    backBtn.style.color = canBack ? '#ccc' : '#444';
+    backBtn.style.cursor = canBack ? 'pointer' : 'default';
+    fwdBtn.style.color = canFwd ? '#ccc' : '#444';
+    fwdBtn.style.cursor = canFwd ? 'pointer' : 'default';
+  }
+  function goToView(view) {
+    if (view === 'home') showHome(false);
+    else if (view === 'about') showAbout(false);
+    else showProject(view, false);
+  }
+
   const style = document.createElement('style');
   style.textContent = `
     .proj-article h1{font-size:2em;font-weight:800;color:#fff;margin:0 0 .25em;line-height:1.15;}
@@ -981,11 +1144,6 @@ function buildProjectsContent(initialSlug = null) {
 
   const content = document.createElement('div');
   content.style.cssText = 'flex:1;overflow-y:auto;background:#0d0d0d;';
-
-  function setToolbar(isHome) {
-    backBtn.style.color = isHome ? '#444' : '#ccc';
-    backBtn.style.cursor = isHome ? 'default' : 'pointer';
-  }
 
   function siteHeader() {
     const d = document.createElement('div');
@@ -1044,9 +1202,9 @@ function buildProjectsContent(initialSlug = null) {
     return out;
   }
 
-  function showHome() {
+  function showHome(push = true) {
     currentView = 'home';
-    setToolbar(true);
+    if (push) pushNav('home');
     addrBar.textContent = 'https://TheAbsurdMachine.com/projects';
     history.pushState({}, '', '/projects');
     content.innerHTML = '';
@@ -1067,10 +1225,10 @@ function buildProjectsContent(initialSlug = null) {
     content.scrollTop = 0;
   }
 
-  function showProject(id) {
+  function showProject(id, push = true) {
     const entry = projectEntries.find(e => e.id === id);
     currentView = id;
-    setToolbar(false);
+    if (push) pushNav(id);
     addrBar.textContent = `https://TheAbsurdMachine.com/projects/${entry.slug}`;
     history.pushState({}, '', `/projects/${entry.slug}`);
     content.innerHTML = '';
@@ -1083,9 +1241,9 @@ function buildProjectsContent(initialSlug = null) {
     content.scrollTop = 0;
   }
 
-  function showAbout() {
+  function showAbout(push = true) {
     currentView = 'about';
-    setToolbar(false);
+    if (push) pushNav('about');
     addrBar.textContent = 'https://TheAbsurdMachine.com/about';
     history.pushState({}, '', '/about');
     content.innerHTML = '';
@@ -1098,7 +1256,12 @@ function buildProjectsContent(initialSlug = null) {
     content.scrollTop = 0;
   }
 
-  backBtn.addEventListener('click', () => { if (currentView !== 'home') showHome(); });
+  backBtn.addEventListener('click', () => {
+    if (navIdx > 0) { navIdx--; goToView(navHistory[navIdx]); updateNavBtns(); }
+  });
+  fwdBtn.addEventListener('click', () => {
+    if (navIdx < navHistory.length - 1) { navIdx++; goToView(navHistory[navIdx]); updateNavBtns(); }
+  });
   homeBtn.addEventListener('click', showHome);
 
   el.appendChild(style);
