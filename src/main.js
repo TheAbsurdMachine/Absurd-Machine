@@ -716,9 +716,16 @@ function openAppWindow({ id, title, width, height, buildContent, offset = { x: 0
 
 function buildBlogContent() {
   const blogEntries = [
-    { id: 'post-1', slug: 'on-building-absurd-things' },
+    {
+      id: 'post-1',
+      slug: 'on-building-absurd-things',
+      title: "On Building Things That Shouldn't Exist",
+      date: 'Jun 2025',
+      desc: "A meditation on projects that make no business sense — and why that's exactly the point.",
+    },
   ];
-  let activeId = blogEntries[0].id;
+
+  let currentView = 'home';
 
   const el = document.createElement('div');
   el.style.cssText = 'display:flex;flex-direction:column;height:100%;background:#111;overflow:hidden;';
@@ -726,13 +733,30 @@ function buildBlogContent() {
   // ── Browser toolbar ──
   const toolbar = document.createElement('div');
   toolbar.style.cssText = 'height:40px;background:#2a2a2a;border-bottom:1px solid #111;display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0;';
-  toolbar.innerHTML = `
-    <button style="background:none;border:none;color:#666;font-size:17px;cursor:default;padding:4px 6px;line-height:1;">←</button>
-    <button style="background:none;border:none;color:#666;font-size:17px;cursor:default;padding:4px 6px;line-height:1;">→</button>
-    <button style="background:none;border:none;color:#888;font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;" id="blog-refresh">↺</button>
-    <div id="blog-address" style="flex:1;background:#3a3a3a;border-radius:6px;padding:5px 12px;font-size:12px;color:#bbb;font-family:system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>`;
 
-  // ── Inline styles for blog typography ──
+  const backBtn = document.createElement('button');
+  backBtn.style.cssText = 'background:none;border:none;color:#444;font-size:17px;cursor:default;padding:4px 6px;line-height:1;';
+  backBtn.textContent = '←';
+
+  const fwdBtn = document.createElement('button');
+  fwdBtn.style.cssText = 'background:none;border:none;color:#444;font-size:17px;cursor:default;padding:4px 6px;line-height:1;';
+  fwdBtn.textContent = '→';
+
+  const homeBtn = document.createElement('button');
+  homeBtn.title = 'Home';
+  homeBtn.style.cssText = 'background:none;border:none;color:#888;font-size:15px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;';
+  homeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4v-4h2v4h4V7h2L8 1z"/></svg>`;
+
+  const addrBar = document.createElement('div');
+  addrBar.style.cssText = 'flex:1;background:#3a3a3a;border-radius:6px;padding:5px 12px;font-size:12px;color:#bbb;font-family:system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+  addrBar.textContent = 'absurdmachine.dev/blog';
+
+  toolbar.appendChild(backBtn);
+  toolbar.appendChild(fwdBtn);
+  toolbar.appendChild(homeBtn);
+  toolbar.appendChild(addrBar);
+
+  // ── Inline styles ──
   const style = document.createElement('style');
   style.textContent = `
     .blog-article h1{font-size:2em;font-weight:800;color:#fff;margin:0 0 .25em;line-height:1.15;}
@@ -749,11 +773,60 @@ function buildBlogContent() {
     .blog-article a{color:#58a6ff;text-decoration:none;}
     .blog-article a:hover{text-decoration:underline;}
     .blog-tag{color:#d7ba7d;}
-    .blog-post-meta{font-size:.85em;color:#555;margin:.25em 0 2em;}`;
+    .blog-post-meta{font-size:.85em;color:#555;margin:.25em 0 2em;}
+    .blog-index-item{border-top:1px solid #1a1a1a;padding:22px 0;cursor:pointer;transition:background 0.1s;}
+    .blog-index-item:hover{background:rgba(255,255,255,0.02);}
+    .blog-index-title{font-size:1.05em;font-weight:700;color:#ddd;transition:color 0.1s;}
+    .blog-index-item:hover .blog-index-title{color:#fff;}`;
 
   // ── Content area ──
   const content = document.createElement('div');
   content.style.cssText = 'flex:1;overflow-y:auto;background:#0d0d0d;';
+
+  function setToolbar(isHome) {
+    backBtn.style.color = isHome ? '#444' : '#ccc';
+    backBtn.style.cursor = isHome ? 'default' : 'pointer';
+  }
+
+  function siteHeader(crumbs) {
+    const d = document.createElement('div');
+    d.style.cssText = 'border-bottom:1px solid #181818;padding:18px 0;flex-shrink:0;';
+    d.innerHTML = `<div style="max-width:700px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:8px;font-family:system-ui;">
+      <span style="font-size:14px;font-weight:700;color:#fff;">The Absurd Machine</span>
+      ${crumbs.map(c => `<span style="color:#444;">/</span><span style="font-size:13px;color:${c.color || '#888'};">${c.label}</span>`).join('')}
+    </div>`;
+    return d;
+  }
+
+  function showHome() {
+    currentView = 'home';
+    setToolbar(true);
+    addrBar.textContent = 'absurdmachine.dev/blog';
+    content.innerHTML = '';
+
+    content.appendChild(siteHeader([{ label: 'blog', color: '#007acc' }]));
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'max-width:700px;margin:44px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
+    wrap.innerHTML = `<h1 style="font-size:1.5em;font-weight:800;color:#fff;margin:0 0 6px;">Writing</h1>
+      <p style="color:#555;font-size:13px;margin:0 0 36px;line-height:1.6;">Notes on building things that shouldn't exist.</p>`;
+
+    blogEntries.forEach(entry => {
+      const item = document.createElement('div');
+      item.className = 'blog-index-item';
+      item.innerHTML = `
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;">
+          <span class="blog-index-title">${entry.title}</span>
+          <span style="font-size:11px;color:#555;white-space:nowrap;margin-left:20px;">${entry.date}</span>
+        </div>
+        <p style="margin:0;font-size:13px;color:#666;line-height:1.65;">${entry.desc}</p>`;
+      item.addEventListener('click', () => showPost(entry.id));
+      wrap.appendChild(item);
+    });
+
+    content.appendChild(wrap);
+    content.scrollTop = 0;
+  }
 
   function blogInline(text) {
     let s = esc(text);
@@ -769,47 +842,21 @@ function buildBlogContent() {
   function mdToHtml(md) {
     const lines = md.split('\n');
     let out = '', para = [], inUl = false, inOl = false, inPre = false;
-
-    const flushPara = () => {
-      if (para.length) { const t = para.join(' ').trim(); if (t) out += `<p>${t}</p>`; para = []; }
-    };
-    const closeLists = () => {
-      if (inUl) { out += '</ul>'; inUl = false; }
-      if (inOl) { out += '</ol>'; inOl = false; }
-    };
-
+    const flushPara = () => { if (para.length) { const t = para.join(' ').trim(); if (t) out += `<p>${t}</p>`; para = []; } };
+    const closeLists = () => { if (inUl) { out += '</ul>'; inUl = false; } if (inOl) { out += '</ol>'; inOl = false; } };
     for (const line of lines) {
-      if (/^ {4}/.test(line)) {
-        flushPara(); closeLists();
-        if (!inPre) { out += '<pre><code>'; inPre = true; }
-        out += esc(line.slice(4)) + '\n';
-        continue;
-      }
+      if (/^ {4}/.test(line)) { flushPara(); closeLists(); if (!inPre) { out += '<pre><code>'; inPre = true; } out += esc(line.slice(4)) + '\n'; continue; }
       if (inPre) { out += '</code></pre>'; inPre = false; }
-
-      if (/^- /.test(line)) {
-        flushPara();
-        if (!inUl) { closeLists(); out += '<ul>'; inUl = true; }
-        out += `<li>${blogInline(line.slice(2))}</li>`;
-        continue;
-      }
-      if (/^\d+\. /.test(line)) {
-        flushPara();
-        if (!inOl) { closeLists(); out += '<ol>'; inOl = true; }
-        const m = line.match(/^\d+\. (.*)/);
-        out += `<li>${blogInline(m[1])}</li>`;
-        continue;
-      }
+      if (/^- /.test(line)) { flushPara(); if (!inUl) { closeLists(); out += '<ul>'; inUl = true; } out += `<li>${blogInline(line.slice(2))}</li>`; continue; }
+      if (/^\d+\. /.test(line)) { flushPara(); if (!inOl) { closeLists(); out += '<ol>'; inOl = true; } const m = line.match(/^\d+\. (.*)/); out += `<li>${blogInline(m[1])}</li>`; continue; }
       closeLists();
-
       if (!line.trim()) { flushPara(); continue; }
-      if (/^# /.test(line))   { flushPara(); out += `<h1>${blogInline(line.slice(2))}</h1>`; continue; }
-      if (/^## /.test(line))  { flushPara(); out += `<h2>${blogInline(line.slice(3))}</h2>`; continue; }
-      if (/^### /.test(line)) { flushPara(); out += `<h3>${blogInline(line.slice(4))}</h3>`; continue; }
-      if (/^> /.test(line))   { flushPara(); out += `<blockquote>${blogInline(line.slice(2))}</blockquote>`; continue; }
-      if (/^---+$/.test(line)){ flushPara(); out += '<hr>'; continue; }
+      if (/^# /.test(line))    { flushPara(); out += `<h1>${blogInline(line.slice(2))}</h1>`; continue; }
+      if (/^## /.test(line))   { flushPara(); out += `<h2>${blogInline(line.slice(3))}</h2>`; continue; }
+      if (/^### /.test(line))  { flushPara(); out += `<h3>${blogInline(line.slice(4))}</h3>`; continue; }
+      if (/^> /.test(line))    { flushPara(); out += `<blockquote>${blogInline(line.slice(2))}</blockquote>`; continue; }
+      if (/^---+$/.test(line)) { flushPara(); out += '<hr>'; continue; }
       if (/^\*[^*]/.test(line)){ flushPara(); out += `<p class="blog-post-meta">${esc(line.replace(/^\*|\*$/g, ''))}</p>`; continue; }
-
       para.push(blogInline(line));
     }
     flushPara(); closeLists();
@@ -819,39 +866,26 @@ function buildBlogContent() {
 
   function showPost(id) {
     const entry = blogEntries.find(e => e.id === id);
-    activeId = id;
-
-    const addr = el.querySelector('#blog-address');
-    if (addr) addr.textContent = `absurdmachine.dev/blog/${entry.slug}`;
-
+    currentView = id;
+    setToolbar(false);
+    addrBar.textContent = `absurdmachine.dev/blog/${entry.slug}`;
     content.innerHTML = '';
-
-    // Site header
-    const header = document.createElement('div');
-    header.style.cssText = 'border-bottom:1px solid #181818;padding:18px 0;';
-    header.innerHTML = `
-      <div style="max-width:700px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:10px;font-family:system-ui;">
-        <span style="font-size:14px;font-weight:700;color:#fff;">The Absurd Machine</span>
-        <span style="color:#444;">/</span>
-        <span style="font-size:13px;color:#007acc;">blog</span>
-        ${blogEntries.length > 1 ? `<span style="color:#444;">/</span><span style="font-size:13px;color:#888;">${files[id].name.replace('.md','')}</span>` : ''}
-      </div>`;
-
-    // Article
+    content.appendChild(siteHeader([{ label: 'blog', color: '#007acc' }, { label: entry.title }]));
     const article = document.createElement('article');
     article.className = 'blog-article';
     article.style.cssText = 'max-width:700px;margin:52px auto 100px;padding:0 28px;font-family:-apple-system,"Segoe UI",sans-serif;';
     article.innerHTML = mdToHtml(files[id].content);
-
-    content.appendChild(header);
     content.appendChild(article);
     content.scrollTop = 0;
   }
 
+  backBtn.addEventListener('click', () => { if (currentView !== 'home') showHome(); });
+  homeBtn.addEventListener('click', showHome);
+
   el.appendChild(style);
   el.appendChild(toolbar);
   el.appendChild(content);
-  showPost(activeId);
+  showHome();
   return el;
 }
 
