@@ -51,6 +51,7 @@ Most answers are wrong. That's the point.
 **Status:** [active]
 **Live:** mayphex.com
 **Repo:** github.com/TheAbsurdMachine/Neon-Void
+**Year:** 2026
 **Stack:** TypeScript · React 18 · Canvas 2D · Vite 7
 
 ---
@@ -1066,7 +1067,7 @@ function buildBlogContent(initialSlug = null) {
 
 function buildProjectsContent(initialSlug = null) {
   const projectEntries = [
-    { id: 'neon-void',   slug: 'neon-void',   title: 'Neon Void',   date: '2024' },
+    { id: 'neon-void',   slug: 'neon-void',   title: 'Neon Void',   date: '2026' },
     { id: 'byte-brawn',  slug: 'byte-brawn',  title: 'ByteBrawn',   date: '2025' },
     { id: 'mayphex', slug: 'mayphex', title: 'Mayphex', date: '2025' },
   ];
