@@ -658,6 +658,10 @@ function attachWindowChrome(win, titlebar, { onClose, onMinimize, onMax } = {}) 
     e.stopPropagation();
     if (onMax) onMax(); else winToggleMax(win);
   });
+  titlebar.addEventListener('dblclick', e => {
+    if (e.target.classList.contains('light')) return;
+    if (onMax) onMax(); else winToggleMax(win);
+  });
   win.addEventListener('mousedown', () => bringToFront(win));
 }
 
@@ -1255,6 +1259,7 @@ function buildIdeWindow() {
   titlebar.querySelector('.light-red').addEventListener('click', e => { e.stopPropagation(); closeWindow(win); });
   titlebar.querySelector('.light-yellow').addEventListener('click', e => { e.stopPropagation(); closeWindow(win); });
   titlebar.querySelector('.light-green').addEventListener('click', e => { e.stopPropagation(); toggleMaximize(win); });
+  titlebar.addEventListener('dblclick', e => { if (!e.target.classList.contains('light')) toggleMaximize(win); });
 
   // IDE content
   const body = document.createElement('div');
