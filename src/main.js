@@ -1573,11 +1573,15 @@ function buildMobileStatusBar() {
   const right = document.createElement('div');
   right.className = 'mobile-status-right';
   right.innerHTML = `
-    <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor" style="opacity:.85">
+    <svg width="13" height="12" viewBox="0 0 13 12" fill="currentColor" style="opacity:.85">
       <rect x="0" y="8" width="3" height="4" rx=".5"/>
-      <rect x="4.5" y="5.5" width="3" height="6.5" rx=".5"/>
-      <rect x="9" y="3" width="3" height="9" rx=".5"/>
-      <rect x="13.5" y="0" width="3" height="12" rx=".5"/>
+      <rect x="5" y="5.5" width="3" height="6.5" rx=".5"/>
+      <rect x="10" y="3" width="3" height="9" rx=".5"/>
+    </svg>
+    <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" style="opacity:.85">
+      <path d="M8 3.5C5.8 3.5 3.8 4.4 2.3 5.9L0.9 4.5C2.8 2.6 5.3 1.5 8 1.5s5.2 1.1 7.1 3L13.7 5.9C12.2 4.4 10.2 3.5 8 3.5z"/>
+      <path d="M8 6.5c-1.4 0-2.6.5-3.5 1.4L3.1 6.5C4.4 5.2 6.1 4.5 8 4.5s3.6.7 4.9 2L11.5 7.9C10.6 7 9.4 6.5 8 6.5z"/>
+      <circle cx="8" cy="11" r="1.5"/>
     </svg>
     <svg width="25" height="12" viewBox="0 0 25 12" fill="none" style="opacity:.85">
       <rect x=".5" y=".5" width="21" height="11" rx="2.5" stroke="currentColor" stroke-opacity=".4"/>
@@ -1765,11 +1769,8 @@ function initMobile() {
   const grid = document.createElement('div');
   grid.className = 'mobile-grid';
   [
-    { label: 'Blog',      key: 'blog',      onClick: () => openMobileApp('blog') },
-    { label: 'Projects',  key: 'projects',  onClick: () => openMobileApp('projects') },
-    { label: 'Portfolio', key: 'portfolio', onClick: () => openMobileApp('portfolio') },
-    { label: 'YouTube',   key: 'youtube',   onClick: () => window.open('https://youtube.com/@theabsurdmachine', '_blank') },
-    { label: 'GitHub',    key: 'github',    onClick: () => window.open('https://github.com/TheAbsurdMachine', '_blank') },
+    { label: 'YouTube', key: 'youtube', onClick: () => window.open('https://youtube.com/@theabsurdmachine', '_blank') },
+    { label: 'GitHub',  key: 'github',  onClick: () => window.open('https://github.com/TheAbsurdMachine', '_blank') },
   ].forEach(({ label, key, onClick }) => grid.appendChild(buildMobileGridIcon(label, key, onClick)));
   home.appendChild(grid);
 
