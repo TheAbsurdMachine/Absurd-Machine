@@ -24,7 +24,7 @@ Most answers are wrong. That's the point.
 
 - **Neon Void**    [active]      arcade space shooter · live at mayphex.com
 - **ByteBrawn**    [prototype]   great name. concept TBD.
-- **Mayphex**      [prototype]   scheduling, probably
+- **Mayphex**      [active]      Excel for spatial unit management
 
 ---
 
@@ -166,55 +166,63 @@ for the answer.`
     name: 'mayphex.md',
     content: `# Mayphex
 
-**Status:** [prototype]
+**Status:** [active]
 **Repo:** github.com/TheAbsurdMachine/Mayphex
 
 ---
 
 ## What Is It?
 
-Still figuring it out.
+Excel for spatial unit management.
 
-Working idea: a scheduling tool for people who already know
-what they need to do — but keep not doing it because the
-tooling gets in the way.
+A universal tool for mapping and managing physical units — seats,
+beds, desks, rooms — across any environment that needs to count,
+arrange, and export what it contains.
 
-Every calendar app is designed for someone who already has
-their life together. Mayphex is for the other kind of person.
+Stadiums. Hospitals. Offices. Event venues. Anywhere you need to
+turn a floor plan into structured data.
 
 ---
 
 ## The Problem
 
-Scheduling tools assume you want to schedule. They front-load
-configuration: recurring events, color codes, shared calendars,
-integrations with seven other apps.
+Every industry that manages physical space ends up building the
+same thing from scratch: a custom tool for labeling units, arranging
+them visually, and exporting the result somewhere useful.
 
-Most people just need to know: what am I doing today, and when?
+Stadium ops teams do it in spreadsheets. Healthcare orgs do it
+in legacy software from 2003. Office managers do it by hand.
+
+Mayphex is the tool they're all trying to build.
+
+---
+
+## What It Does
+
+- **Unit generation** — define and label any type of unit
+  (sections, rows, seats, beds, desks, rooms) for any environment
+- **Flexible arrangement** — drag, resize, and configure layouts
+  with an interface that adapts to the physical space
+- **Data export** — structured output for analytics and BI tools
+  (Tableau, Excel, whatever the org already uses)
+- **Scalability** — same tool, any layout, any industry
+
+---
+
+## Use Cases
+
+- Stadium seating maps for sports analytics
+- Hospital bed and room layouts for healthcare planning
+- Office desk arrangements for workplace management
+- Event venue mapping for logistics and safety
 
 ---
 
 ## Current State
 
-- Concept phase
-- Some sketches
-- No code yet
-
-The questions still outnumber the answers.
-That's the right stage to be in.
-
----
-
-## Questions To Answer
-
-- What is the actual atomic unit of a schedule?
-  (A task? A block? An intention?)
-- What happens when someone misses a block?
-  (Reschedule, or just move on?)
-- Why would anyone use this over a notes app and a phone alarm?
-
-The answer to the last one might be "they wouldn't."
-Build it anyway.`
+- Core layout engine in progress
+- Unit generation and labeling works
+- Export pipeline being built`
   },
 
   'post-1': {
@@ -1060,7 +1068,7 @@ function buildProjectsContent(initialSlug = null) {
   const projectEntries = [
     { id: 'neon-void',   slug: 'neon-void',   title: 'Neon Void',   date: '2024' },
     { id: 'byte-brawn',  slug: 'byte-brawn',  title: 'ByteBrawn',   date: '2025' },
-    { id: 'mayphex',     slug: 'mayphex',     title: 'Mayphex',     date: '2025' },
+    { id: 'mayphex', slug: 'mayphex', title: 'Mayphex', date: '2025' },
   ];
 
   let currentView = 'home';
@@ -1355,7 +1363,7 @@ function buildDesktopMenubar() {
 
   left.appendChild(brand);
   left.appendChild(name);
-  left.appendChild(mbItem('Portfolio', () => {
+  left.appendChild(mbItem('JorBot IDE', () => {
     const ide = document.getElementById('ide-window');
     if (ide) { if (ide.style.display === 'none') revealWindow(ide); bringToFront(ide); }
   }));
@@ -1412,7 +1420,7 @@ function buildIdeWindow() {
       <span class="light light-yellow"></span>
       <span class="light light-green"></span>
     </div>
-    <span class="titlebar-title">The Absurd Machine — Portfolio</span>`;
+    <span class="titlebar-title">The Absurd Machine — JorBot IDE</span>`;
 
   titlebar.querySelector('.light-red').addEventListener('click', e => { e.stopPropagation(); closeWindow(win); });
   titlebar.querySelector('.light-yellow').addEventListener('click', e => { e.stopPropagation(); closeWindow(win); });
@@ -1456,9 +1464,9 @@ function buildDock(ideWin) {
     return item.querySelector('.dock-dot');
   }
 
-  // Portfolio IDE
+  // JorBot IDE
   const ideDot = dockItem(
-    'Portfolio IDE',
+    'JorBot IDE',
     `<div style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);width:100%;height:100%;border-radius:13px;display:flex;align-items:center;justify-content:center;">
        <span style="font-family:'JetBrains Mono',monospace;font-size:17px;color:#007acc;font-weight:700">&lt;/&gt;</span>
      </div>`,
@@ -1721,7 +1729,7 @@ function openMobileApp(type, slug = null) {
   backBtn.innerHTML = `<svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Home`;
   backBtn.addEventListener('click', () => closeMobileApp(type));
 
-  const titles = { blog: 'Blog', projects: 'Projects', portfolio: 'Portfolio' };
+  const titles = { blog: 'Blog', projects: 'Projects', portfolio: 'JorBot IDE' };
   const titleEl = document.createElement('span');
   titleEl.className = 'mobile-panel-title';
   titleEl.textContent = titles[type] || '';
@@ -1774,7 +1782,7 @@ function initMobile() {
   [
     { label: 'Blog',      key: 'blog',      onClick: () => openMobileApp('blog') },
     { label: 'Projects',  key: 'projects',  onClick: () => openMobileApp('projects') },
-    { label: 'Portfolio', key: 'portfolio', onClick: () => openMobileApp('portfolio') },
+    { label: 'JorBot IDE', key: 'portfolio', onClick: () => openMobileApp('portfolio') },
   ].forEach(({ label, key, onClick }) => dockInner.appendChild(buildMobileDockIcon(label, key, onClick)));
   dockWrap.appendChild(dockInner);
   home.appendChild(dockWrap);
@@ -1789,7 +1797,7 @@ function initMobile() {
 function buildDesktopIcons(ideWin) {
   const icons = [
     {
-      label: 'Portfolio',
+      label: 'JorBot IDE',
       iconHtml: `<div style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;">
         <span style="font-family:'JetBrains Mono',monospace;font-size:18px;color:#007acc;font-weight:700">&lt;/&gt;</span></div>`,
       onClick: () => { if (!state.windowOpen) revealWindow(ideWin); else bringToFront(ideWin); }
