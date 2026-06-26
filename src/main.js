@@ -230,7 +230,7 @@ Mayphex is the tool they're all trying to build.
     name: 'on-building-absurd-things.md',
     content: `# On Building Things That Shouldn't Exist
 
-*Jun 2025*
+*Jun 2026*
 
 ---
 
@@ -243,81 +243,33 @@ These are the only projects worth building.
 
 ---
 
-## The Problem With Side Projects
+## The Pipeline
 
-Most side projects die in one of two places:
+    idea → repo → prototype → post → video → ship
 
-1. The prototype works but never gets written about
-2. The post gets written but never turns into anything real
-
-I've done both. Built a prototype, felt good about it, moved on.
-Wrote a post, published it, forgot about the underlying project.
-
-Neither one counts as shipping.
+Each stage forces the next. The post forces clarity.
+The video forces depth. By the time you ship,
+you've interrogated the thing from three angles.
 
 ---
 
-## A Forcing Function
+## What This Looks Like
 
-The fix is structure. A pipeline where each stage makes the next
-stage unavoidable.
-
-    idea
-      ↓
-    repo       // commitment. you named it. it exists now.
-      ↓
-    prototype  // does it work? close enough counts.
-      ↓
-    post       // explain it. you'll find the holes.
-      ↓
-    video      // teach it. you'll find more holes.
-      ↓
-    ship
-
-The post forces clarity. You can't write about something you
-don't understand, and the act of writing surfaces every assumption
-you made during the prototype.
-
-The video forces depth. You can't teach something you can't explain
-out loud, and the act of recording finds every gap the writing missed.
-
-By the time you ship, you've interrogated the thing from three angles.
-You know why it works. You know where it doesn't. That's the point.
-
----
-
-## What This Looks Like In Practice
-
-**Neon Void** started as "what if I built a game." No more specific
-than that. The prototype was a ship that could move and shoot.
+**Neon Void** started as "what if I built a game."
+The prototype was a ship that could move and shoot.
 Then enemies. Then a shop. Then it was a real game.
-
-The post forced me to articulate why the ML training environment
-mattered — which forced me to actually build the observation/action
-API properly, not just gesture at it.
 
 **ByteBrawn** started as a name. Not a problem, not a product —
 just a word that arrived and felt too right to ignore.
-
-The Three.js site went up to claim the territory. The concept
-hasn't arrived yet. That's fine. Some of the best projects start
-this way: the name comes first, and the name is a promise
-you spend the next year figuring out how to keep.
-
-The pattern holds: sometimes the writing comes before the building.
-You ship the name, and the name tells you what to build.
+The Three.js site claimed the territory. The concept is TBD.
+Some projects start that way. The name is a promise.
 
 ---
 
 ## Why "Absurd Machine"?
 
-A machine that runs on absurd inputs.
-
-An idea that makes no business sense
-→ becomes a thing that exists and works.
-
-The inputs are absurd. The output is real. That gap — between
-"this makes no sense" and "this is a thing now" — is the point.
+An idea that makes no sense
+→ becomes a thing that works.
 
 That's the whole machine.`
   },
@@ -328,40 +280,15 @@ That's the whole machine.`
 
 ---
 
-## $ whoami
+Making square wheels to better appreciate the round ones.
 
-Builder. Tinkerer. Maker of things that probably shouldn't exist.
-
-Working at the intersection of code, ideas, and poor life decisions.
-
----
-
-## What I Do
-
-I build things, write about building them,
-then make videos about writing about building them.
-
-It's absurd. That's the point.
+Code, ideas, occasionally shipping something.
+Usually in that order. Sometimes not.
 
 ---
-
-## Contact
-
-If you want to talk about a project, an idea, or anything in between:
 
 - GitHub: github.com/TheAbsurdMachine
-- Email: [contact form coming soon]
-
----
-
-## This Site
-
-Built with:
-- Vite
-- Vanilla JS
-- An unhealthy obsession with VS Code aesthetics
-
-No framework. No CMS. Just files.`
+`
   }
 };
 
@@ -845,7 +772,7 @@ function buildBlogContent(initialSlug = null) {
       id: 'post-1',
       slug: 'on-building-absurd-things',
       title: "On Building Things That Shouldn't Exist",
-      date: 'Jun 2025',
+      date: 'Jun 2026',
       desc: "A meditation on projects that make no business sense — and why that's exactly the point.",
     },
   ];
@@ -1508,6 +1435,14 @@ function buildDock(ideWin) {
     }
   );
 
+  // Neon Void
+  dockItem(
+    'Neon Void',
+    `<div style="width:100%;height:100%;border-radius:13px;overflow:hidden;"><img src="/neon-void-icon.png" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`,
+    null,
+    () => window.open('https://mayphex.com', '_blank')
+  );
+
   // YouTube
   dockItem(
     'YouTube',
@@ -1600,6 +1535,7 @@ const MOBILE_ICON_HTML = {
   blog: `<div style="background:linear-gradient(145deg,#2d1b4e,#1a0d2e);width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><svg width="28" height="30" viewBox="0 0 26 28" fill="none"><rect x="2" y="2" width="22" height="24" rx="3" stroke="#c678dd" stroke-width="2"/><line x1="7" y1="9" x2="19" y2="9" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="14" x2="19" y2="14" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="19" x2="14" y2="19" stroke="#c678dd" stroke-width="1.5" stroke-linecap="round"/></svg></div>`,
   projects: `<div style="background:linear-gradient(145deg,#0d2e24,#051a0f);width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#4ec9b0"><rect x="2" y="2" width="9" height="9" rx="2"/><rect x="13" y="2" width="9" height="9" rx="2"/><rect x="2" y="13" width="9" height="9" rx="2"/><rect x="13" y="13" width="9" height="9" rx="2"/></svg></div>`,
   portfolio: `<div style="background:linear-gradient(145deg,#1a3a5c,#0d0d1a);width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><span style="font-family:'JetBrains Mono',monospace;font-size:21px;color:#007acc;font-weight:700">&lt;/&gt;</span></div>`,
+  'neon-void': `<div style="width:100%;height:100%;border-radius:inherit;overflow:hidden;"><img src="/neon-void-icon.png" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`,
   youtube: `<div style="background:#0f0f0f;width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;"><svg width="34" height="24" viewBox="0 0 32 22"><rect width="32" height="22" rx="5" fill="#FF0000"/><path d="M13 6.5l10 4.5-10 4.5V6.5z" fill="white"/></svg></div>`,
   github: `<div style="background:#161b22;width:100%;height:100%;border-radius:inherit;display:flex;align-items:center;justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="#e6edf3"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></div>`,
 };
@@ -1771,8 +1707,9 @@ function initMobile() {
   const grid = document.createElement('div');
   grid.className = 'mobile-grid';
   [
-    { label: 'YouTube', key: 'youtube', onClick: () => window.open('https://youtube.com/@theabsurdmachine', '_blank') },
-    { label: 'GitHub',  key: 'github',  onClick: () => window.open('https://github.com/TheAbsurdMachine', '_blank') },
+    { label: 'Neon Void', key: 'neon-void', onClick: () => window.open('https://mayphex.com', '_blank') },
+    { label: 'YouTube',   key: 'youtube',   onClick: () => window.open('https://youtube.com/@theabsurdmachine', '_blank') },
+    { label: 'GitHub',    key: 'github',    onClick: () => window.open('https://github.com/TheAbsurdMachine', '_blank') },
   ].forEach(({ label, key, onClick }) => grid.appendChild(buildMobileGridIcon(label, key, onClick)));
   home.appendChild(grid);
 
@@ -1826,6 +1763,11 @@ function buildDesktopIcons(ideWin) {
         pw.style.left = `${window.innerWidth - w - 20}px`;
         pw.style.top = '48px';
       }
+    },
+    {
+      label: 'Neon Void',
+      iconHtml: `<div style="width:100%;height:100%;border-radius:12px;overflow:hidden;"><img src="/neon-void-icon.png" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`,
+      onClick: () => window.open('https://mayphex.com', '_blank')
     },
     {
       label: 'YouTube',
